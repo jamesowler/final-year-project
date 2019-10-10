@@ -9,7 +9,7 @@ import cv2
 
 def preprocessing(image_name, n4=True, save_dir=None, circle_crop=False):
     '''
-    Python implementation of the N4 bias field correction algorithm
+    Python wrapper for the N4 bias field correction algorithm
     '''
 
     img_directory = os.path.dirname(image_name)
@@ -23,6 +23,7 @@ def preprocessing(image_name, n4=True, save_dir=None, circle_crop=False):
 
     if n4:
         # Implementation of N4 bias field correction using simpleITK
+        print('Processing...')
         sitk_img = sitk.GetImageFromArray(img_data_green)
         corrector = sitk.N4BiasFieldCorrectionImageFilter()
         corrector.SetNumberOfThreads(8)
@@ -42,4 +43,10 @@ def preprocessing(image_name, n4=True, save_dir=None, circle_crop=False):
 
 
 if __name__ == '__main__':
-    preprocessing('/home/james/Downloads/DR-data/Data/DRIVE/test/images/13_test.tif', save_dir=None, n4=False)
+    parser = argparse.ArgumentParser(description= 'Preprocessing for retinal images')
+    parser.add_argument('file_path', help='Input file path of image file you want to process')
+    parser.add_argument('-n4', required=False, action='store_true', help='Use N4 bias field correction')
+    parser.add_argument('--output_dir', '-o', help='Path of directory to save the image to')
+    args = parser.parse_args()
+
+    preprocessing(args.file_path, save_dir=args.output_dir, n4=args.n4)
