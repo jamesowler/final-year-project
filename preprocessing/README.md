@@ -1,6 +1,6 @@
 #### N4 Bias Field correction implementation
 
-Prerequsits: ensure doker is install on your local machine
+Prerequsits: ensure [docker](https://www.docker.com/) is install on your local machine
 
 `git clone https://github.com/jamesowler/final-year-project.git .`
 `cd final-year-project/preprocessing`
