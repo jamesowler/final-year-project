@@ -4,6 +4,7 @@ from keras.optimizers import Adam
 import numpy as np
 from keras import backend as K
 from keras import losses
+from keras.utils import plot_model
 
 from params import params
 
@@ -119,5 +120,6 @@ def model_2d_u_net(params):
 
 if __name__ == '__main__':
     model = model_2d_u_net(params)
+    plot_model(model, './model_diagram.png', show_shapes=True)
     print(model.summary())
 
