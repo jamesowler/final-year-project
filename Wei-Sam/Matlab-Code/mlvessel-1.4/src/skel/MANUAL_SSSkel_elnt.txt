@@ -1,0 +1,50 @@
+/*************************************************************************
+        MAC449 - Trabalho de formatura supervisionado
+
+             "Space-Scale Skeletonization (SSSkel)"
+
+ Autor: Emerson Luiz Navarro Tozette
+	emr@linux.ime.usp.br
+ Data: 10/08/2002
+ Linguagem utilizada: C (com interface (mex file) para o Matlab )
+ Universidade de Sao Paulo - IME
+
+
+  		     *** MANUAL ***
+
+
+1) What the program does:
+
+   Thuis program receives an image I of 4-connected labels (each label
+representing an object of a binary image) e an integer Nm (number of
+exact dilations to be applied) and returns 3 matricses:
+
+  - matrix C with the contours of all objects and holes in I.
+
+  - matrix D with Nm exact dilations of all the contours in C.  (exact
+dilation usinng dependent labels).
+
+  - matrix E (skeleton) that keeps the difference image of D (the
+difference image is calculated using shocks for each contour
+individually).
+
+2) Example of program use:
+
+  Let BIN be a binary image;
+
+  >> [label,n] = bwlabel (BIN,4); % labelling using 4-connectivity.
+  >> [C,D,E] = skel (label, 30);  % SSSkel with Nm 30.
+
+3) Compiling:
+
+  >> mex skel.c
+
+4) IMPORTANT:
+
+ * ADDING TWO FRAMES: The objects of the binary image BIN should not
+touch the image border (this causes an error in contour detection). If
+this happens, two frames should be added to BIN.
+
+**************************************************************************/
+
+

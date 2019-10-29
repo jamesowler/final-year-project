@@ -1,6 +1,7 @@
 import os
 import argparse
 import time
+import glob
 
 from matplotlib import pyplot as plt
 import SimpleITK as sitk
@@ -40,6 +41,12 @@ def preprocessing(image_name, n4=True, save_dir=None, circle_crop=False):
     else:
         plt.imsave(img_directory + '/' + img_basename.split('.')[0] + f'{prefix}-processed.png', final_img, cmap='gray')
 
+
+def contrast_enhancement(image_name):
+    img = cv2.imread(image_name, 0)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    cl1 = clahe.apply(img)
+    cv2.imwrite(image_name, cl1)
 
 
 if __name__ == '__main__':

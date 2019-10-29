@@ -1,4 +1,18 @@
 .vscode
-Wei-Sam
 .idea
 __pycache__
+data
+*.h5
+Wei-Sam/data
+Wei-Sam/Matlab-Code/Changes
+Wei-Sam/Matlab-Code/mlvessel-optional-1.4
+Wei-Sam/Matlab-Code/How to.txt
+Wei-Sam/results
+Wei-Sam/Matlab-Code/mlvessel-1.4/classifiers
+Wei-Sam/Matlab-Code/mlvessel-1.4/*images
+Wei-Sam/Matlab-Code/mlvessel-1.4/features*
+Wei-Sam/Matlab-Code/mlvessel-1.4/models
+Wei-Sam/Matlab-Code/mlvessel-1.4/results
+Wei-Sam/Matlab-Code/mlvessel-1.4/COPYING.txt
+Wei-Sam/Matlab-Code/mlvessel-1.4/linear
+Wei-Sam/Matlab-Code/mlvessel-1.4/guitmp
