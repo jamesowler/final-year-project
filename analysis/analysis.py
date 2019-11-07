@@ -1,6 +1,6 @@
+import glob
 import numpy as np
 from scipy.io import loadmat
-import glob
 
 import Python.bayesiantests as bst
 

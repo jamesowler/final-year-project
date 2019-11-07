@@ -1,13 +1,10 @@
 .vscode
 .idea
 __pycache__
-data
 *.h5
 
-stats/hierarchical
-stats/slides
+data
 
-Wei-Sam/data
 Wei-Sam/Matlab-Code/Changes
 Wei-Sam/Matlab-Code/mlvessel-optional-1.4
 Wei-Sam/Matlab-Code/How to.txt
