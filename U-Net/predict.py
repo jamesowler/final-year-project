@@ -105,5 +105,5 @@ if __name__ == '__main__':
 
     # multi_predict()
 
-    patch_inferance(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\21_training.png', r'C:\Users\James\Projects\final-year-project\patch_model_5000.h5')
+    patch_inferance(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\01_test.png', r'C:\Users\James\Projects\final-year-project\patch_model_9000.h5')
 

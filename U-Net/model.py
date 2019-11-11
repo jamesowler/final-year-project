@@ -14,7 +14,7 @@ def model_2d_u_net(params):
     '''
 
     kernal_size = (3, 3)
-    img_rows, img_columns = params['image_size_x'], params['image_size_y']
+    img_rows, img_columns = params['patch_size'], params['patch_size']
 
     inputs = Input((img_rows, img_columns, params['n_channels']))
 
@@ -108,7 +108,7 @@ def model_2d_u_net(params):
 
     ### Output layer:
     conv7 = Conv2D(params['n_classes'], (1, 1), padding='same', name='conv7')(act)
-    flat_1 = Reshape((params['image_size_x']*params['image_size_y'], params['n_classes']))(conv7)
+    flat_1 = Reshape((params['patch_size']*params['patch_size'], params['n_classes']))(conv7)
     flat_2 = Permute((1,2))(flat_1)
     act_last = Activation('sigmoid')(flat_2)
 

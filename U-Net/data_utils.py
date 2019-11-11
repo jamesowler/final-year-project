@@ -61,7 +61,7 @@ def load_batch(img_names, segs_dir, xshape, yshape, n_channels, patch_size):
         X_full[n, :, :, 0] = x[:, :]
         Y_full[n, :, :, 0] = y[:, :]
 
-    return X, Y, X_full, Y_full, rand_ints
+    return X, Y #, X_full, Y_full, rand_ints
 
 
 def blockshaped(arr, nrows, ncols):
