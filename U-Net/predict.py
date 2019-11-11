@@ -23,19 +23,19 @@ params['n_channels'], params['patch_size'])
     print(y_batch.shape)
 
     y_pred = model.predict_on_batch(y_batch)
-    y_pred = np.reshape(y_pred, (324, 32, 32, 1))
+    y_pred = np.reshape(y_pred, (params['n_patches'], params['patch_size'], params['patch_size'], 1))
     print(y_pred.shape)
     y_pred_full = unblockshaped(y_pred[:, :, :, 0], params['image_size_x'], params['image_size_y'])
 
     y_pred_full[y_pred_full < 0.5] = 0
     y_pred_full[y_pred_full > 0.5] = 1
     plt.imshow(y_pred_full, cmap='gray')
-    plt.show()
+    # plt.show()
 
     #TODO 
-    # plt.imsave() ...
+    outfile_default = filename.split('.')[0] + '-seg.png'
+    plt.imsave(outfile_default, y_pred_full)
 
-    
 
 def predict(params, filename, model_name, outfile=None):
 
@@ -89,11 +89,11 @@ def predict(params, filename, model_name, outfile=None):
 
 
 def multi_predict():
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-test-1\*')
-    training_files = [i for i in files if 'test.png' in i]
+    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2\*')
+    test_files = [i for i in files if 'test.png' in i]
 
-    for i in training_files:
-        predict(params, i, '.\model.h5')
+    for i in test_files:
+        patch_inferance(i, r'C:\Users\James\Projects\final-year-project\patch_model_4000.h5')
 
 
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     # predict(params, r'C:\Users\James\Projects\final-year-project\data\STARE\imgs\17.tif', '.\model.h5')
 
-    # multi_predict()
+    multi_predict()
 
-    patch_inferance(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\01_test.png', r'C:\Users\James\Projects\final-year-project\patch_model_9000.h5')
+    # patch_inferance(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2\01_test.png', r'C:\Users\James\Projects\final-year-project\patch_model_4000.h5')
 

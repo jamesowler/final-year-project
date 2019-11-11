@@ -31,8 +31,7 @@ def train():
         X, Y = load_batch(training_files, seg_dir, params['image_size_x'], params['image_size_y'], 1, params['patch_size'])
 
         seed = np.random.randint(0, 10000)
-        data_gen_args = dict(rotation_range=5.,
-                             fill_mode='constant',
+        data_gen_args = dict(fill_mode='constant',
                              horizontal_flip=True,
                              vertical_flip=True,
                              cval=0)
@@ -59,7 +58,7 @@ def train():
             if batches >= 1:
                 break
         
-        if e % 1000 == 0:
+        if e % 500 == 0:
             model.save(f'./patch_model_{str(e)}.h5')
 
 
