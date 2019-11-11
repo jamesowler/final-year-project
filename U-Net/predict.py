@@ -8,7 +8,34 @@ from keras.models import load_model
 import matplotlib.pyplot as plt
 
 from params import params
+from data_utils import test_batch, unblockshaped
 
+
+def patch_inferance(filename, model_file):
+
+    '''
+    Predicts output segmentation for each patch - joins patches together to create final segmentation map
+    '''
+
+    model = load_model(model_file)
+    y_batch = test_batch(filename, params['image_size_x'], params['image_size_y'],
+params['n_channels'], params['patch_size'])
+    print(y_batch.shape)
+
+    y_pred = model.predict_on_batch(y_batch)
+    y_pred = np.reshape(y_pred, (324, 32, 32, 1))
+    print(y_pred.shape)
+    y_pred_full = unblockshaped(y_pred[:, :, :, 0], params['image_size_x'], params['image_size_y'])
+
+    y_pred_full[y_pred_full < 0.5] = 0
+    y_pred_full[y_pred_full > 0.5] = 1
+    plt.imshow(y_pred_full, cmap='gray')
+    plt.show()
+
+    #TODO 
+    # plt.imsave() ...
+
+    
 
 def predict(params, filename, model_name, outfile=None):
 
@@ -70,8 +97,13 @@ def multi_predict():
 
 
 
+
+
 if __name__ == '__main__':
 
     # predict(params, r'C:\Users\James\Projects\final-year-project\data\STARE\imgs\17.tif', '.\model.h5')
 
-    multi_predict()
+    # multi_predict()
+
+    patch_inferance(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\21_training.png', r'C:\Users\James\Projects\final-year-project\patch_model_5000.h5')
+
