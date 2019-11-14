@@ -11,7 +11,7 @@ from params import params
 from data_utils import test_batch, unblockshaped
 
 
-def patch_inferance(filename, model_file):
+def patch_inferance(filename, model_file, save_dir):
 
     '''
     Predicts output segmentation for each patch - joins patches together to create final segmentation map
@@ -20,7 +20,7 @@ def patch_inferance(filename, model_file):
     model = load_model(model_file)
     y_batch = test_batch(filename, params['image_size_x'], params['image_size_y'],
 params['n_channels'], params['patch_size'])
-    print(y_batch.shape)
+    # print(y_batch.shape)
 
     y_pred = model.predict_on_batch(y_batch)
     y_pred = np.reshape(y_pred, (params['n_patches'], params['patch_size'], params['patch_size'], 1))
@@ -33,7 +33,8 @@ params['n_channels'], params['patch_size'])
     # plt.show()
 
     #TODO 
-    outfile_default = filename.split('.')[0] + '-seg.png'
+    file_basename = os.path.basename(filename)
+    outfile_default = os.path.join(save_dir, file_basename.split(".")[0] + '-seg.png')
     plt.imsave(outfile_default, y_pred_full)
 
 
@@ -89,11 +90,11 @@ def predict(params, filename, model_name, outfile=None):
 
 
 def multi_predict():
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2\*')
-    test_files = [i for i in files if 'test.png' in i]
+    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\images\*')
+    test_files = [i for i in files if 'test' in i]
 
     for i in test_files:
-        patch_inferance(i, r'C:\Users\James\Projects\final-year-project\patch_model_4000.h5')
+        patch_inferance(i, r'C:\Users\James\Projects\final-year-project\U-Net\models\patch_64_large_model\patch_model_3000.h5',r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2')
 
 
 
