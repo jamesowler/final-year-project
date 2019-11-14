@@ -43,16 +43,18 @@ def load_batch(img_names, segs_dir, xshape, yshape, n_channels, patch_size):
         seg_data = seg_data.resize((xshape, yshape), resample=Image.NEAREST)
 
         x[:, :] = np.array(img_data)[:, :, 0]
+        # normalise data [0, 1]
+        x = (x - np.min(x))/np.ptp(x)
+
         y[:, :] = np.array(seg_data)[:, :, 0]
+        # convert 255 to 1
+        y[y == 255] = 1
 
         # extract random patch
         rand_int = np.random.randint(half_patch, high=(xshape - half_patch), size=2)
         rand_ints.append(rand_int)
         x_patch = x[(rand_int[0] - half_patch):(rand_int[0] + half_patch), (rand_int[1] - half_patch):(rand_int[1] + half_patch)]
         y_patch = y[(rand_int[0] - half_patch):(rand_int[0] + half_patch), (rand_int[1] - half_patch):(rand_int[1] + half_patch)]
-
-        # convert 255 to 1
-        y_patch[y_patch == 255] = 1
 
         X[n, :, :, 0] = x_patch[:, :]
         Y[n, :, :, 0] = y_patch[:, :]
@@ -93,10 +95,15 @@ def unblockshaped(arr, h, w):
                .reshape(h, w))
 
 def test_batch(img_name, xshape, yshape, n_channels, patch_size):
-    
+
     n_patches = int((xshape*yshape)/(patch_size*patch_size))
     img_data = Image.open(img_name).convert('LA')
     img_data = img_data.resize((xshape, yshape), resample=Image.BILINEAR)
+    
+    # normalise data [0, 1]
+    img_data = np.array(img_data)
+    img_data = (img_data - np.min(img_data))/np.ptp(img_data)
+
     image = np.zeros((xshape, yshape), dtype='float32')
     patches_final = np.zeros((n_patches, patch_size, patch_size, n_channels), dtype='float32')
 
@@ -138,5 +145,5 @@ if __name__ == '__main__':
     def test_inference_loading():
         test_batch(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-n4\01_test.png', params['image_size_x'], params['image_size_y'], 1, params['patch_size'])
 
-    testing()
-    # test_inference_loading()
+    # testing()
+    test_inference_loading()

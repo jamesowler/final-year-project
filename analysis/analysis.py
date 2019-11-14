@@ -55,8 +55,8 @@ def correlated_ttest_(n_folds, classifier1, classifier2):
 
     # print(accuray_diff, roc_diff)
 
-    p_acc = bst.correlated_ttest(accuray_diff, 0.003,  runs=n_folds)
-    p_roc = bst.correlated_ttest(roc_diff, 0.003, runs=n_folds)
+    p_acc = bst.correlated_ttest(accuray_diff, 0.001,  runs=n_folds)
+    p_roc = bst.correlated_ttest(roc_diff, 0.001, runs=n_folds)
 
     print(np.sum(accuray_diff))
     print(p_acc, p_roc)
