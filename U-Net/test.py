@@ -18,7 +18,6 @@ def auc(pred_file_probs, gt_file, fov_filename):
     '''
     
     img1 = np.array(Image.open(pred_file_probs).convert('LA'))[:, :, 0]
-    img1 = cv2.resize(img1, (565, 584)) 
 
     img2 = np.array(Image.open(gt_file).convert('LA'))[:, :, 0]
 
@@ -38,11 +37,12 @@ def accuracy(pred_file, gt_file, fov_filename):
 
     # using PIL instead as cv2 seems to have an issue opening .gif files
     img1 = np.array(Image.open(pred_file).convert('LA'))[:, :, 0]
-    img1 = cv2.resize(img1, (565, 584), interpolation=cv2.INTER_NEAREST)
-    
+
+    if np.max(img1) == 215:
+        img1[img1 == 30] = 0
+        img1[img1 == 215] = 1
+
     img1[img1 == 255] = 1
-    img1[img1 < 200] = 0
-    img1[img1 > 200] = 1
 
     img2 = np.array(Image.open(gt_file).convert('LA'))[:, :, 0]
     img2[img2 == 255] = 1
@@ -80,14 +80,13 @@ def multi_test(results_dir, filter1, filter2):
     accs = []
     aucs = []
 
-
     # print(test_results, '\n', test_results_eval)
 
     for i, j, k in zip(test_results, seg_ground_truths, fov_files):
         acc = accuracy(i, j, k)
         accs.append(acc)
     
-    for i, j, k in zip(test_results, seg_ground_truths, fov_files):
+    for i, j, k in zip(test_results_eval, seg_ground_truths, fov_files):
         auc_value = auc(i,j,k)
         aucs.append(auc_value)
 
@@ -101,3 +100,4 @@ if __name__ == '__main__':
     multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-5', 'seg.png', 'seg-eval.png')
 
     # multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-Soares', 'class.png', 'gray-eval')
+

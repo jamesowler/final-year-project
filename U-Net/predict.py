@@ -19,6 +19,9 @@ def patch_inferance(filename, model_file, save_dir):
     '''
 
     model = load_model(model_file)
+    y_full = cv2.imread(filename, 0)
+    height, width = y_full.shape
+    
     y_batch = test_batch(filename, params['image_size_x'], params['image_size_y'],params['n_channels'], params['patch_size'])
     # print(y_batch.shape)
 
@@ -40,6 +43,9 @@ def patch_inferance(filename, model_file, save_dir):
     outfile_default = os.path.join(save_dir, file_basename.split(".")[0] + '-seg.png')
     outfile_default_eval = os.path.join(save_dir, file_basename.split(".")[0] + '-seg-eval.png')
     
+    y_pred_full = cv2.resize(y_pred_full, (width, height), interpolation=cv2.INTER_NEAREST)
+    Y_pred_full_eval = cv2.resize(Y_pred_full_eval, (width, height), interpolation=cv2.INTER_LINEAR)
+
     # save final segmentation mask and segmenation probabilities
     plt.imsave(outfile_default, y_pred_full)
     plt.imsave(outfile_default_eval, Y_pred_full_eval)
@@ -107,9 +113,10 @@ def multi_predict(model_file, outputdir):
 
 if __name__ == '__main__':
 
-    results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2'
+    results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-5'
 
     # obtain predicted segmentation masks
-    multi_predict(r'C:\Users\James\Projects\final-year-project\U-Net\models\patch_32\patch_model_6000.h5', results_dir)
+    multi_predict(r'C:\Users\James\Projects\final-year-project\patch_model_8500.h5', results_dir)
+    
     # calc stats
     multi_test(results_dir, 'seg.png', 'seg-eval.png')

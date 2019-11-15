@@ -20,7 +20,7 @@ def train():
     seg_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
     
     # load in model
-    model = model_2d_u_net_shallow(params)
+    model = model_2d_u_net(params)
     # model = load_model('./model.h5')
 
     # begin training
@@ -48,10 +48,13 @@ def train():
 
         batches = 0
 
+        loss = []
+
         print('Epoch: ', e)
         for X_batch, Y_batch in train_generator:
             Y_out = Y_batch.reshape((len(training_files), params['patch_size'] * params['patch_size'], 1))
             l1 = model.train_on_batch(X_batch, Y_out)
+            loss.append(l1)
             batches =+ 1
             print(l1)     
             # insert logic about batch size later on
@@ -61,6 +64,13 @@ def train():
         if e % 500 == 0:
             model.save(f'./patch_model_{str(e)}.h5')
 
+    with open('./losses.txt', 'w') as f:
+        for i in loss:
+            f.write(str(i) + ',')
+
+def plot_losses(filename):
+    
+    pass
 
 if __name__ == '__main__':
     train()
