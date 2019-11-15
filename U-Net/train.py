@@ -9,7 +9,7 @@ from keras.models import load_model
 
 from params import params
 from data_utils import load_batch
-from model import model_2d_u_net
+from model import model_2d_u_net, model_2d_u_net_shallow
 
 def train():
 
@@ -20,7 +20,7 @@ def train():
     seg_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
     
     # load in model
-    model = model_2d_u_net(params)
+    model = model_2d_u_net_shallow(params)
     # model = load_model('./model.h5')
 
     # begin training

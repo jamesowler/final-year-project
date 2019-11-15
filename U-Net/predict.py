@@ -90,13 +90,11 @@ def predict(params, filename, model_name, outfile=None):
 
 
 def multi_predict():
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\images\*')
+    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\*')
     test_files = [i for i in files if 'test' in i]
 
     for i in test_files:
-        patch_inferance(i, r'C:\Users\James\Projects\final-year-project\U-Net\models\patch_64_large_model\patch_model_3000.h5',r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2')
-
-
+        patch_inferance(i, r'C:\Users\James\Projects\final-year-project\patch_model_2500.h5',r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-5')
 
 
 
