@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from params import params
 from data_utils import test_batch, unblockshaped
+from test import multi_test
 
 
 def patch_inferance(filename, model_file, save_dir):
@@ -18,14 +19,16 @@ def patch_inferance(filename, model_file, save_dir):
     '''
 
     model = load_model(model_file)
-    y_batch = test_batch(filename, params['image_size_x'], params['image_size_y'],
-params['n_channels'], params['patch_size'])
+    y_batch = test_batch(filename, params['image_size_x'], params['image_size_y'],params['n_channels'], params['patch_size'])
     # print(y_batch.shape)
 
     y_pred = model.predict_on_batch(y_batch)
     y_pred = np.reshape(y_pred, (params['n_patches'], params['patch_size'], params['patch_size'], 1))
     print(y_pred.shape)
     y_pred_full = unblockshaped(y_pred[:, :, :, 0], params['image_size_x'], params['image_size_y'])
+
+    Y_pred_full_eval = y_pred_full
+    # print(np.unique(Y_pred_full_eval))
 
     y_pred_full[y_pred_full < 0.5] = 0
     y_pred_full[y_pred_full > 0.5] = 1
@@ -35,7 +38,11 @@ params['n_channels'], params['patch_size'])
     #TODO 
     file_basename = os.path.basename(filename)
     outfile_default = os.path.join(save_dir, file_basename.split(".")[0] + '-seg.png')
+    outfile_default_eval = os.path.join(save_dir, file_basename.split(".")[0] + '-seg-eval.png')
+    
+    # save final segmentation mask and segmenation probabilities
     plt.imsave(outfile_default, y_pred_full)
+    plt.imsave(outfile_default_eval, Y_pred_full_eval)
 
 
 def predict(params, filename, model_name, outfile=None):
@@ -89,20 +96,20 @@ def predict(params, filename, model_name, outfile=None):
     return y_pred_resized
 
 
-def multi_predict():
+def multi_predict(model_file, outputdir):
     files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\*')
-    test_files = [i for i in files if 'test' in i]
+    test_files = [i for i in files if 'test.png' in i]
 
     for i in test_files:
-        patch_inferance(i, r'C:\Users\James\Projects\final-year-project\patch_model_2500.h5',r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-5')
+        patch_inferance(i, model_file, outputdir)
 
 
 
 if __name__ == '__main__':
 
-    # predict(params, r'C:\Users\James\Projects\final-year-project\data\STARE\imgs\17.tif', '.\model.h5')
+    results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2'
 
-    multi_predict()
-
-    # patch_inferance(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2\01_test.png', r'C:\Users\James\Projects\final-year-project\patch_model_4000.h5')
-
+    # obtain predicted segmentation masks
+    multi_predict(r'C:\Users\James\Projects\final-year-project\U-Net\models\patch_32\patch_model_6000.h5', results_dir)
+    # calc stats
+    multi_test(results_dir, 'seg.png', 'seg-eval.png')
