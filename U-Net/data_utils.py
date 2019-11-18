@@ -24,7 +24,6 @@ def load_batch(img_names, segs_dir, xshape, yshape, n_channels, patch_size):
 
     rand_ints = []
 
-
     # half of patch size
     half_patch = int(patch_size/2)
 
@@ -43,8 +42,9 @@ def load_batch(img_names, segs_dir, xshape, yshape, n_channels, patch_size):
         seg_data = seg_data.resize((xshape, yshape), resample=Image.NEAREST)
 
         x[:, :] = np.array(img_data)[:, :, 0]
+
         # normalise data [0, 1]
-        x = (x - np.min(x))/np.ptp(x)
+        # x = (x - np.min(x))/np.ptp(x)
 
         y[:, :] = np.array(seg_data)[:, :, 0]
         # convert 255 to 1

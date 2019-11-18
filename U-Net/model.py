@@ -1,4 +1,4 @@
-from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, concatenate, BatchNormalization, Activation, Reshape, Permute
+from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, concatenate, BatchNormalization, Activation, Reshape, Permute, Dropout
 from keras.models import Model
 from keras.optimizers import Adam
 import numpy as np
@@ -121,7 +121,7 @@ def model_2d_u_net(params):
 
 def model_2d_u_net_shallow(params):
     '''
-    2D U-net implementation using Keras with tensorflow as the backend
+    2D U-net implementation using Keras with tensorflow as the backend - fewer layers (with only 2 max pooling operations) - more suited to patch base segmentation approach
     '''
 
     kernal_size = (3, 3)
@@ -173,10 +173,10 @@ def model_2d_u_net_shallow(params):
     up0 = concatenate([UpSampling2D(size=(2,2))(act3), (act1)], axis=-1)
 
     # Block 4: 128-64
-    conv4 = Conv2D(256, kernal_size, padding='same', name='conv4_0')(up0)
+    conv4 = Conv2D(128, kernal_size, padding='same', name='conv4_0')(up0)
     bn = BatchNormalization()(conv4)
     act = Activation('relu')(bn)
-    conv4 = Conv2D(128, kernal_size, padding='same', name='conv4_1')(act)
+    conv4 = Conv2D(64, kernal_size, padding='same', name='conv4_1')(act)
     bn = BatchNormalization()(conv4)
     act = Activation('relu')(bn)
 
@@ -185,10 +185,10 @@ def model_2d_u_net_shallow(params):
     up1 = concatenate([UpSampling2D(size=(2,2))(act), act0], axis=-1)
 
     # Block 5: 64-32
-    conv5 = Conv2D(128, kernal_size, padding='same', name='conv5_0')(up1)
+    conv5 = Conv2D(64, kernal_size, padding='same', name='conv5_0')(up1)
     bn = BatchNormalization()(conv5)
     act = Activation('relu')(bn)
-    conv5 = Conv2D(64, kernal_size, padding='same', name='conv5_1')(act)
+    conv5 = Conv2D(32, kernal_size, padding='same', name='conv5_1')(act)
     bn = BatchNormalization()(conv5)
     act = Activation('relu')(bn)
 
@@ -204,6 +204,82 @@ def model_2d_u_net_shallow(params):
     model.compile(loss=losses.binary_crossentropy, optimizer=Adam(lr=float(params['learning_rate'])))
 
     return model
+
+
+def model_2d_u_net_shallow_dropout(params):
+    
+    '''
+    Architecture taken from paper: 'Retina Blood Vessel Segmentation Using A U-Net Based Convolutional Nerual Network'
+    '''
+
+    kernal_size = (3, 3)
+    img_rows, img_columns = params['patch_size'], params['patch_size']
+
+    inputs = Input((img_rows, img_columns, params['n_channels']))
+
+    ####
+    # Encoding branch - down-sampling
+    ####
+
+    # Block 0: 32
+    conv0 = Conv2D(32, kernal_size, padding='same', name='conv0_0')(inputs)
+    act = Activation('relu')(conv0)
+    do = Dropout(0.2)(act)
+    conv1 = Conv2D(32, kernal_size, padding='same', name='conv0_1')(do)
+    act0 = Activation('relu')(conv1)
+
+    # Max pooling 32 -> 16
+    pool0 = MaxPooling2D((2,2))(act1)
+
+    # Block 1: 64
+    conv2 = Conv2D(64, kernal_size, padding='same', name='conv1_0')(pool0)
+    act = Activation('relu')(conv2)
+    do = Dropout(0.2)(act)
+    conv3 = Conv2D(64, kernal_size, padding='same', name='conv1_1')(do)
+    act1 = Activation('relu')(conv3)
+
+    # Max pooling 16 -> 8
+    pool1 = MaxPooling2D((2,2))(act1)
+
+    # Block 2: 128
+    conv4 = Conv2D(128, kernal_size, padding='same', name= 'conv2_0')(pool1)
+    act = Activation('relu')(conv4)
+    do = Dropout(0.2)(act)
+    conv5 = Conv2D(128, kernal_size, padding='same', name='conv2_1')(do)
+    act2 = Activation('relu')(conv4)
+
+    # Up-sampling 8 -> 16
+    up0 = concatenate([UpSampling2D((2,2))(act2), act1], axis=-1)
+
+    # Block 3: 64
+    conv6 = Conv2D(64, kernal_size, padding='same', name= 'conv3_0')(up0)
+    act = Activation('relu')(conv6)
+    do = Dropout(0.2)(act)
+    conv7 = Conv2D(64, kernal_size, padding='same', name= 'conv3_1')(do)
+    act3 = Activation('relu')(conv7)
+
+    # Up-sampling 16 -> 32
+    up1 = concatenate([UpSampling2D((2,2))(act3), act0], axis=-1)
+
+    # Block 4: 32
+    conv8 = Conv2D(32, kernal_size, padding='same', name= 'conv4_0')(up1)
+    act = Activation('relu')(conv8)
+    do = Dropout(0.2)(act)
+    conv9 = Conv2D(32, kernal_size, padding='same', name= 'conv4_0')(up1)
+    act = Activation('relu')(conv8)
+
+    ### Output layer:
+    conv7 = Conv2D(params['n_classes'], (1, 1), padding='same', name='conv7')(act)
+    flat_1 = Reshape((params['patch_size']*params['patch_size'], params['n_classes']))(conv7)
+    flat_2 = Permute((1,2))(flat_1)
+    act_last = Activation('sigmoid')(flat_2)
+
+    # compile model with binary cross-entropy loss and Adam optimiser
+    model = Model(inputs=[inputs], outputs=[act_last])
+    model.compile(loss=losses.binary_crossentropy, optimizer=Adam(lr=float(params['learning_rate'])))
+
+    return model
+
 
 if __name__ == '__main__':
     model = model_2d_u_net(params)

@@ -20,8 +20,10 @@ def train():
     seg_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
     
     # load in model
-    model = model_2d_u_net(params)
+    model = model_2d_u_net_shallow(params)
     # model = load_model('./model.h5')
+
+    loss = []
 
     # begin training
     for e in range(1, params['n_epochs'] + 1):
@@ -32,7 +34,6 @@ def train():
 
         seed = np.random.randint(0, 10000)
         data_gen_args = dict(rotation_range=5.,
-                             zoom_range=0.5,
                              fill_mode='constant',
                              horizontal_flip=True,
                              vertical_flip=True,
@@ -49,8 +50,6 @@ def train():
         train_generator = zip(image_generator, mask_generator)
 
         batches = 0
-
-        loss = []
 
         print('Epoch: ', e)
         for X_batch, Y_batch in train_generator:

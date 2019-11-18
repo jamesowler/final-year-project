@@ -62,4 +62,4 @@ def correlated_ttest_(n_folds, classifier1, classifier2):
     print(p_acc, p_roc)
 
 if __name__ == '__main__':
-    correlated_ttest_(5, 'mixed_drive_n4_gmm', 'mixed_drive_gmm')
+    correlated_ttest_(5, 'mixed_drive_gmm', 'mixed_drive_gmm')
