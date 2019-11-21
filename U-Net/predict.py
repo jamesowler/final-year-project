@@ -103,7 +103,7 @@ def predict(params, filename, model_name, outfile=None):
 
 
 def multi_predict(model_file, outputdir):
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\*')
+    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-n4\*')
     test_files = [i for i in files if 'test.png' in i]
 
     for i in test_files:
@@ -113,10 +113,10 @@ def multi_predict(model_file, outputdir):
 
 if __name__ == '__main__':
 
-    results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4'
+    results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3'
 
     # obtain predicted segmentation masks
-    multi_predict(r'C:\Users\James\Projects\final-year-project\patch_model_5000.h5', results_dir)
+    multi_predict(r'C:\Users\James\Projects\final-year-project\patch_model_9000.h5', results_dir)
     
     # calc stats
     multi_test(results_dir, 'seg.png', 'seg-eval.png')

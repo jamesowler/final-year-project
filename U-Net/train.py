@@ -15,7 +15,7 @@ def train():
 
     start_training = time.time()
 
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\*')
+    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-n4\*')
     training_files = [i for i in files if 'training.png' in i]
     seg_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
     
@@ -68,6 +68,13 @@ def train():
     with open('./losses.txt', 'w') as f:
         for i in loss:
             f.write(str(i) + ',')
+
+
+def train_from_data_dir():
+    '''
+    Train model using dataset of patches
+    '''
+    pass
 
 def plot_losses(filename):
     

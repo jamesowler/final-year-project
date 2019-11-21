@@ -44,7 +44,7 @@ def load_batch(img_names, segs_dir, xshape, yshape, n_channels, patch_size):
         x[:, :] = np.array(img_data)[:, :, 0]
 
         # normalise data [0, 1]
-        # x = (x - np.min(x))/np.ptp(x)
+        x = (x - np.min(x))/np.ptp(x)
 
         y[:, :] = np.array(seg_data)[:, :, 0]
         # convert 255 to 1
@@ -117,10 +117,65 @@ def test_batch(img_name, xshape, yshape, n_channels, patch_size):
     return patches_final
 
 
+def create_image_img_folder(ouput_dir, patch_size, n_patches):
+    '''
+    Creates dataset of image patches
+    '''
+    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\*')
+    training_files = [i for i in files if 'training.png' in i]
+    segs_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
+
+    img_dir = os.path.join(ouput_dir, 'imgs')
+    seg_dir = os.path.join(ouput_dir, 'segs')
+
+    os.mkdir(img_dir)
+    os.mkdir(seg_dir)
+
+    half_patch = int(patch_size/2)
+
+    for n, img in enumerate(training_files):
+
+        x = np.zeros((576, 576), dtype='float32')
+        y = np.zeros((576, 576), dtype='float32')
+
+        # load in image and segmentation
+        img_id = os.path.basename(img)[0:2]
+        seg_name = os.path.join(segs_dir, img_id + '_manual1.gif')
+        log(1, seg_name)
+        img_data = Image.open(img).convert('LA')
+        seg_data = Image.open(seg_name).convert('LA')
+        
+        # reshape data:
+        img_data = img_data.resize((576, 576), resample=Image.BILINEAR)
+        seg_data = seg_data.resize((576, 576), resample=Image.NEAREST)
+        x[:, :] = np.array(img_data)[:, :, 0]
+
+        # normalise data [0, 1]
+        x = (x - np.min(x))/np.ptp(x)
+
+        y[:, :] = np.array(seg_data)[:, :, 0]
+
+        # convert 255 to 1
+        y[y == 255] = 1
+
+        for n_patch in range(n_patches):
+
+            # extract random patch
+            rand_int = np.random.randint(half_patch, high=(576 - half_patch), size=2)
+            x_patch = x[(rand_int[0] - half_patch):(rand_int[0] + half_patch), (rand_int[1] - half_patch):(rand_int[1] + half_patch)]
+            y_patch = y[(rand_int[0] - half_patch):(rand_int[0] + half_patch), (rand_int[1] - half_patch):(rand_int[1] + half_patch)]   
+
+            # save patches
+            img_save_name = os.path.join(img_dir, f'{img_id}-{n_patch}-img.png')
+            seg_save_name = os.path.join(seg_dir, f'{img_id}-{n_patch}-seg.png')
+            plt.imsave(img_save_name, x_patch, cmap='gray')
+            plt.imsave(seg_save_name, y_patch, cmap='gray')
+
+
 if __name__ == '__main__':
 
     def testing():
-        files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\*')
+        files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-n4\*')
         test_files = [i for i in files if 'test.png' in i]
         seg_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
         
@@ -146,4 +201,5 @@ if __name__ == '__main__':
         test_batch(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-n4\01_test.png', params['image_size_x'], params['image_size_y'], 1, params['patch_size'])
 
     # testing()
-    test_inference_loading()
+    # test_inference_loading()
+    create_image_img_folder(r'C:\Users\James\Projects\final-year-project\data\drive_patches\n4-64', 64, 5000)
