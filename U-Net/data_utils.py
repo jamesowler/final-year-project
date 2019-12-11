@@ -4,10 +4,12 @@ import glob
 
 import numpy as np
 from PIL import Image
+import cv2
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.image import extract_patches_2d
 
 from params import params
+import loss_funcs
 
 def load_batch(img_names, segs_dir, xshape, yshape, n_channels, patch_size):
     
@@ -107,7 +109,6 @@ def test_batch(img_name, xshape, yshape, n_channels, patch_size):
     image = np.zeros((xshape, yshape), dtype='float32')
     patches_final = np.zeros((n_patches, patch_size, patch_size, n_channels), dtype='float32')
 
-
     image[:, :] = np.array(img_data)[:, :, 0]
 
     patches = blockshaped(image, patch_size, patch_size)
@@ -121,7 +122,7 @@ def create_image_img_folder(ouput_dir, patch_size, n_patches):
     '''
     Creates dataset of image patches
     '''
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-clahe\*')
+    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-n4\*')
     training_files = [i for i in files if 'training.png' in i]
     segs_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
 
@@ -170,6 +171,35 @@ def create_image_img_folder(ouput_dir, patch_size, n_patches):
             seg_save_name = os.path.join(seg_dir, f'{img_id}-{n_patch}-seg.png')
             plt.imsave(img_save_name, x_patch, cmap='gray')
             plt.imsave(seg_save_name, y_patch, cmap='gray')
+
+
+def load_batch_patch_training(img_names, imgs_dir, segs_dir, patch_size):
+
+    # empty array for batch
+    X = np.zeros((len(img_names), patch_size, patch_size, 1), dtype='float32')
+    Y = np.zeros((len(img_names), patch_size, patch_size, 1), dtype='float32')
+
+    for n, i in enumerate(img_names):
+        
+        # path names
+        id = i.split('-')[0] + '-' + i.split('-')[1]
+        img_path = os.path.join(imgs_dir, i)
+        seg_path = os.path.join(segs_dir, id + '-seg.png')
+
+        # load img data
+        img_data = cv2.imread(img_path, 0)
+
+        # normalize data
+        img_data = (img_data - np.min(img_data))/np.ptp(img_data)
+
+        # load seg data
+        seg_data = cv2.imread(seg_path, 0)
+        seg_data[seg_data == 255] = 1
+
+        X[n, :, :, 0] = img_data
+        Y[n, :, :, 0] = seg_data
+
+    return X, Y
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ from keras import backend as K
 from keras import losses
 from keras.utils import plot_model
 
+import loss_funcs
 from params import params
 
 def model_2d_u_net(params):
@@ -201,7 +202,8 @@ def model_2d_u_net_shallow(params):
 
     # compile model with binary cross-entropy loss and Adam optimiser
     model = Model(inputs=[inputs], outputs=[act_last])
-    model.compile(loss=losses.binary_crossentropy, optimizer=Adam(lr=float(params['learning_rate'])))
+    loss_mathod = getattr(loss_funcs, params['loss_method'])
+    model.compile(loss=loss_mathod, optimizer=Adam(lr=float(params['learning_rate'])))
 
     return model
 
@@ -229,7 +231,7 @@ def model_2d_u_net_shallow_dropout(params):
     act0 = Activation('relu')(conv1)
 
     # Max pooling 32 -> 16
-    pool0 = MaxPooling2D((2,2))(act1)
+    pool0 = MaxPooling2D((2,2))(act0)
 
     # Block 1: 64
     conv2 = Conv2D(64, kernal_size, padding='same', name='conv1_0')(pool0)
@@ -265,7 +267,7 @@ def model_2d_u_net_shallow_dropout(params):
     conv8 = Conv2D(32, kernal_size, padding='same', name= 'conv4_0')(up1)
     act = Activation('relu')(conv8)
     do = Dropout(0.2)(act)
-    conv9 = Conv2D(32, kernal_size, padding='same', name= 'conv4_0')(up1)
+    conv9 = Conv2D(32, kernal_size, padding='same', name= 'conv4_1')(up1)
     act = Activation('relu')(conv8)
 
     ### Output layer:

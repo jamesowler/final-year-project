@@ -48,12 +48,18 @@ def contrast_enhancement(image_name):
     cl1 = clahe.apply(img)
     cv2.imwrite(image_name, cl1)
 
+def extract_channel(image_name):
+    img = cv2.imread(image_name)
+    plt.imsave(image_name, img[:, :, 0], cmap='gray')
+
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description= 'Preprocessing for retinal images')
-    parser.add_argument('file_path', help='Input file path of image file you want to process')
-    parser.add_argument('-n4', required=False, action='store_true', help='Use N4 bias field correction')
-    parser.add_argument('--output_dir', '-o', help='Path of directory to save the image to')
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser(description= 'Preprocessing for retinal images')
+    # parser.add_argument('file_path', help='Input file path of image file you want to process')
+    # parser.add_argument('-n4', required=False, action='store_true', help='Use N4 bias field correction')
+    # parser.add_argument('--output_dir', '-o', help='Path of directory to save the image to')
+    # args = parser.parse_args()
 
-    preprocessing(args.file_path, save_dir=args.output_dir, n4=args.n4)
+    # preprocessing(args.file_path, save_dir=args.output_dir, n4=args.n4)
+
+    extract_channel(r'C:\Users\James\Documents\Uni\Final Project\content\pre-processing-examples\colour - Copy.png')

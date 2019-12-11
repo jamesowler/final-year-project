@@ -67,7 +67,7 @@ def accuracy(pred_file, gt_file, fov_filename):
     return accuray
 
 
-def multi_test(results_dir, filter1, filter2):
+def multi_test(results_dir, filter1, filter2, epoch_num=None):
 
     fov_files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\mask\*')
     seg_ground_truths = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\1st_manual\*')
@@ -93,6 +93,8 @@ def multi_test(results_dir, filter1, filter2):
     print(aucs, '\n \n', accs)
     print()
     print('AUC:', np.mean(aucs), '\nAccuracy: ', np.mean(accs))
+
+    return np.mean(aucs), np.mean(accs)
 
 if __name__ == '__main__':
         
