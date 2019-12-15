@@ -144,8 +144,13 @@ def plot_losses(filename):
     
     pass
 
-if __name__ == '__main__':
-
+def train_patch():
     model = model_2d_u_net_shallow(params)
     model.load_weights(r'C:\Users\James\Projects\final-year-project\patch_model_20.h5')
     train_from_data_dir(params)
+
+
+if __name__ == '__main__':
+
+    model = model_2d_u_net(params)
+    train(params)

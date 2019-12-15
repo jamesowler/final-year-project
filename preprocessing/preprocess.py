@@ -54,12 +54,12 @@ def extract_channel(image_name):
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(description= 'Preprocessing for retinal images')
-    # parser.add_argument('file_path', help='Input file path of image file you want to process')
-    # parser.add_argument('-n4', required=False, action='store_true', help='Use N4 bias field correction')
-    # parser.add_argument('--output_dir', '-o', help='Path of directory to save the image to')
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser(description= 'Preprocessing for retinal images')
+    parser.add_argument('file_path', help='Input file path of image file you want to process')
+    parser.add_argument('-n4', required=False, action='store_true', help='Use N4 bias field correction')
+    parser.add_argument('--output_dir', '-o', help='Path of directory to save the image to')
+    args = parser.parse_args()
 
-    # preprocessing(args.file_path, save_dir=args.output_dir, n4=args.n4)
+    preprocessing(args.file_path, save_dir=args.output_dir, n4=args.n4)
 
-    extract_channel(r'C:\Users\James\Documents\Uni\Final Project\content\pre-processing-examples\colour - Copy.png')
+    # extract_channel(r'C:\Users\James\Documents\Uni\Final Project\content\pre-processing-examples\colour - Copy.png')
