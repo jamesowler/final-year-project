@@ -102,7 +102,7 @@ def train_from_data_dir(params, model):
 
     # train - validation split
     imgs_rand = imgs
-    random.shuffle(imgs_rand)
+    random.Random(21).shuffle(imgs_rand)
     val_index_split = int(len(imgs_rand)*params['val_proportion'])
     train_imgs = imgs_rand[val_index_split:]
     val_imgs = imgs_rand[:val_index_split]
@@ -136,6 +136,7 @@ def train_from_data_dir(params, model):
             else:
                 batch_train_imgs = train_imgs_rand[b*params['batch_size']:]
 
+            print(batch_train_imgs)
             X, Y = load_batch_patch_training(batch_train_imgs, os.path.join(params['data_dir'], 'imgs'), os.path.join(params['data_dir'], 'segs'), params['patch_size'])
             
             # SEED

@@ -10,7 +10,7 @@ params['patch_size'] = 64
 params['preprocessing'] = 'n4-clahe'
 params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive-' + params['preprocessing']
 params['n_epochs'] = 1
-params['batch_size'] = 20
+params['batch_size'] = 30
 params['n_patches'] = int((params['image_size_x']*params['image_size_y'])/(params['patch_size']*params['patch_size']))
 
 params['n_channels'] = 1
@@ -34,6 +34,6 @@ Model options:
 
 '''
 
-params['model'] = 'unet_shallow'
-params['weights'] = r'C:\Users\James\Projects\final-year-project\initial_weights_unet_shallow.h5'
+params['model'] = 'unet'
+params['weights'] = r'C:\Users\James\Projects\final-year-project\initial_weights_unet.h5'
 params['val_proportion'] = 0

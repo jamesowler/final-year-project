@@ -11,7 +11,7 @@ import loss_funcs
 
 def model_2d_u_net(params):
     '''
-    2D U-net implementation using Keras with tensorflow as the backend
+    2D U-net implementation using Keras with tensorflow as the backend - patch training
     '''
 
     kernal_size = (3, 3)
@@ -322,7 +322,8 @@ def model_2d_u_net_shallow(params):
 
 
 if __name__ == '__main__':
-    model = fully_conv_expri_network_full(params)
+    model = model_2d_u_net(params)
+    model.save_weights(r'C:\Users\James\Projects\final-year-project\initial_weights_unet.h5')
     # plot_model(model, './model_diagram.png', show_shapes=True)
     print(model.summary())
 
