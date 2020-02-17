@@ -6,10 +6,10 @@ params['image_size_y'] = 576
 params['full_img_n_epochs'] = 250
 
 # patch training params #####
-params['patch_size'] = 96
-params['preprocessing'] = '\n4-clahe'
-params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\drive_patches' + params['preprocessing'] + '-' + str(params['patch_size'])
-params['n_epochs'] = 10
+params['patch_size'] = 64
+params['preprocessing'] = 'n4-clahe'
+params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive-' + params['preprocessing']
+params['n_epochs'] = 1
 params['batch_size'] = 20
 params['n_patches'] = int((params['image_size_x']*params['image_size_y'])/(params['patch_size']*params['patch_size']))
 
@@ -34,6 +34,6 @@ Model options:
 
 '''
 
-params['model'] = 'MultiResUnet'
-params['weights'] = None # None or r'C:\Users\James\Projects\final-year-project\patch_model_25.h5'
-params['val_proportion'] = 0.1
+params['model'] = 'unet_shallow'
+params['weights'] = r'C:\Users\James\Projects\final-year-project\initial_weights_unet_shallow.h5'
+params['val_proportion'] = 0

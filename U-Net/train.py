@@ -11,7 +11,7 @@ from keras.optimizers import Adam
 
 from params import params
 from data_utils import load_batch_patch_training, load_batch_v1, guass_noise
-from model import model_2d_u_net, model_2d_u_net_shallow, model_2d_u_net_shallow_dropout, model_2d_u_net_full, fully_conv_expri_network, fully_conv_expri_network_full
+from model import model_2d_u_net, model_2d_u_net_shallow, model_2d_u_net_full
 from test_model import MultiResUnet_shallow, MultiResUnet
 import loss_funcs
 
@@ -89,6 +89,9 @@ def train(params, model):
 def train_from_data_dir(params, model):
     '''
     Trains model using dataset of patches
+
+    For pre-processing testing - define seeds for data shuffling and augmentation
+
     '''
 
     imgs_dir = os.path.join(params['data_dir'], 'imgs')
@@ -116,10 +119,11 @@ def train_from_data_dir(params, model):
 
         print('Epoch: ', e)
 
-        rand_shuff_seed = np.random.randint(0, 100)
         # randomize order of training images
         train_imgs_rand = train_imgs
-        random.Random(rand_shuff_seed).shuffle(train_imgs_rand)
+        
+        # SEED
+        random.Random(e).shuffle(train_imgs_rand)
 
         val_freq = int(n_batches_train/2)
 
@@ -133,9 +137,10 @@ def train_from_data_dir(params, model):
                 batch_train_imgs = train_imgs_rand[b*params['batch_size']:]
 
             X, Y = load_batch_patch_training(batch_train_imgs, os.path.join(params['data_dir'], 'imgs'), os.path.join(params['data_dir'], 'segs'), params['patch_size'])
-            seed = np.random.randint(0, 10000)
             
-            # zoom_range = 0.1 
+            # SEED
+            seed = e + batch_num
+
             # preprocessing_function=guass_noise,
             data_gen_args_img = dict(rotation_range=5.,
                                 fill_mode='constant',
@@ -165,7 +170,7 @@ def train_from_data_dir(params, model):
                 accuracies.append(history[1])
                 break
 
-            # Custom training loop 
+            # Custom training progress indicator 
             end = '' if batch_num < n_batches_train - 1 else '\n'
             print("\r{}/{} - ".format(batch_num + 1, n_batches_train) + "{:.4f}".format(history[0]) + ', ' + "{:.4f}".format(history[1]), end = end)
             epoch_loss.append(history[0])
@@ -186,6 +191,7 @@ def train_from_data_dir(params, model):
             eval_score = model.evaluate(X, Y_out, verbose=0)
             eval_losses.append(eval_score[0])
             eval_accuracies.append(eval_score[1])
+
         print('validation loss: {:.4f}'.format(np.mean(eval_losses)))
         print('validation accuracy: {:.4f}'.format(np.mean(eval_accuracies)))
         val_loss.append(np.mean(eval_losses))
