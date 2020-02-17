@@ -15,7 +15,7 @@ from test import multi_test
 
 import loss_funcs
 from params import params
-from model import model_2d_u_net_shallow, model_2d_u_net, model_2d_u_net_full, fully_conv_expri_network
+from model import model_2d_u_net_shallow, model_2d_u_net, model_2d_u_net_full
 from test_model import MultiResUnet_shallow, MultiResUnet
 
 
@@ -127,7 +127,7 @@ def predict(params, filename, model_name, save_dir):
 
 
 def multi_predict(model_file, outputdir):
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-' + params['preprocessing'][1:] + '\*')
+    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-' + params['preprocessing'] + '\*')
     test_files = [i for i in files if 'test.png' in i]
 
     for i in test_files:
@@ -183,7 +183,7 @@ if __name__ == '__main__':
                 f.write('\n')
 
     
-    multi_epoch_pred(first_epoch=10, final_epoch=10, step=1, full=None)
+    multi_epoch_pred(first_epoch=1, final_epoch=1, step=1, full=None)
     
     # multi_epoch_pred(first_epoch=50, final_epoch=250, step=50, full=True)
 
