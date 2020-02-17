@@ -10,14 +10,14 @@ params['patch_size'] = 96
 params['preprocessing'] = '\clahe'
 params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\drive_patches' + params['preprocessing'] + '-' + str(params['patch_size'])
 params['n_epochs'] = 10
-params['batch_size'] = 20
+params['batch_size'] = 25
 params['n_patches'] = int((params['image_size_x']*params['image_size_y'])/(params['patch_size']*params['patch_size']))
 
 params['n_channels'] = 1
 params['n_classes'] = 1
 
 #### Training options
-params['learning_rate'] = 1e-4
+params['learning_rate'] = 2e-4
 params['loss_method'] = 'bce' #bce or weight_bce
 params['loss_weight'] = 5
 
@@ -36,4 +36,4 @@ Model options:
 
 params['model'] = 'MultiResUnet'
 params['weights'] = None # None or r'C:\Users\James\Projects\final-year-project\patch_model_25.h5'
-params['val_proportion'] = 0.1
+params['val_proportion'] = 0.05
