@@ -7,7 +7,7 @@ params['full_img_n_epochs'] = 250
 
 # patch training params #####
 params['patch_size'] = 96
-params['preprocessing'] = '\clahe'
+params['preprocessing'] = '\n4-clahe'
 params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\drive_patches' + params['preprocessing'] + '-' + str(params['patch_size'])
 params['n_epochs'] = 10
 params['batch_size'] = 20

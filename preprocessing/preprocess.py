@@ -4,6 +4,7 @@ import time
 import glob
 
 from matplotlib import pyplot as plt
+import numpy as np
 import SimpleITK as sitk
 import cv2
 
@@ -39,20 +40,29 @@ def preprocessing(image_name, n4=True, save_dir=None, circle_crop=False):
         plt.imsave(save_dir + '/' + img_basename.split('.')[0] + f'{prefix}-processed.png', final_img, cmap='gray')
     
     else:
-        plt.imsave(img_directory + '/' + img_basename.split('-')[0] + '.png', final_img, cmap='gray')
+        plt.imsave(img_directory + '/' + img_basename.split('.')[0] + '.png', final_img, cmap='gray')
 
 
 def contrast_enhancement(image_name):
+    img_directory = os.path.dirname(image_name)
+    img_basename = os.path.basename(image_name)
+
     img = cv2.imread(image_name, 0)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     cl1 = clahe.apply(img)
-    # normalise data
-    cl1 = (cl1 - np.min(cl1))/np.ptp(cl1)
+
+    image_name = img_directory + '/' + img_basename.split('.')[0] + '.png'
+
     cv2.imwrite(image_name, cl1)
 
 def extract_channel(image_name):
+    img_directory = os.path.dirname(image_name)
+    img_basename = os.path.basename(image_name)
+
     img = cv2.imread(image_name)
-    plt.imsave(image_name, img[:, :, 0], cmap='gray')
+    plt.imsave(img_directory + '/' + img_basename.split('.')[0] + '.png', img[:, :, 1], cmap='gray')
+    # plt.imshow(img[:, :, 1], cmap='gray')
+    # plt.show()
 
 
 if __name__ == '__main__':
@@ -65,4 +75,4 @@ if __name__ == '__main__':
     # preprocessing(args.file_path, save_dir=args.output_dir, n4=args.n4)
 
     # extract_channel(r'C:\Users\James\Documents\Uni\Final Project\content\pre-processing-examples\colour - Copy.png')
-    contrast_enhancement(r'C:\Users\James\Desktop\seg_test\0a74c92e287c-preprocessed.png')
+    extract_channel(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs\01_test.tif')
