@@ -3,12 +3,9 @@
 __pycache__
 *.h5
 *.asv
+*.txt
 
 data
-losses.txt
-accuries.txt
-val_accuries.txt
-val_losses.txt
 
 U-Net/models
 
