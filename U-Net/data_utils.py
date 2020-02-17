@@ -11,23 +11,18 @@ from sklearn.feature_extraction.image import extract_patches_2d
 from params import params
 import loss_funcs
 
-def load_batch(img_names, segs_dir, xshape, yshape, n_channels, patch_size):
-    
-    # create empty arrays with desired resampled size - for batch
-    X = np.zeros((len(img_names), patch_size, patch_size, n_channels), dtype='float32')
-    Y = np.zeros((len(img_names), patch_size, patch_size, 1), dtype='float32')
 
-    X_full = np.zeros((len(img_names), xshape, yshape, n_channels), dtype='float32')
-    Y_full = np.zeros((len(img_names), xshape, yshape, 1), dtype='float32')
+def load_batch_v1(img_names, segs_dir, xshape, yshape, n_channels):
+    '''
+    Batch generator for full resolution images
+    '''
+    # create empty arrays with desired resampled size - for batch
+    X = np.zeros((len(img_names), xshape, yshape, n_channels), dtype='float32')
+    Y = np.zeros((len(img_names), xshape, yshape, 1), dtype='float32')
 
     # for n subj in the batch
     x = np.zeros((xshape, yshape), dtype='float32')
     y = np.zeros((xshape, yshape), dtype='float32')
-
-    rand_ints = []
-
-    # half of patch size
-    half_patch = int(patch_size/2)
 
     for n, img in enumerate(img_names):
         
@@ -44,28 +39,51 @@ def load_batch(img_names, segs_dir, xshape, yshape, n_channels, patch_size):
         seg_data = seg_data.resize((xshape, yshape), resample=Image.NEAREST)
 
         x[:, :] = np.array(img_data)[:, :, 0]
-
-        # normalise data [0, 1]
         x = (x - np.min(x))/np.ptp(x)
 
+        # print(np.array(seg_data)[:, :, 0].shape)
         y[:, :] = np.array(seg_data)[:, :, 0]
-        # convert 255 to 1
-        y[y == 255] = 1
 
-        # extract random patch
-        rand_int = np.random.randint(half_patch, high=(xshape - half_patch), size=2)
-        rand_ints.append(rand_int)
-        x_patch = x[(rand_int[0] - half_patch):(rand_int[0] + half_patch), (rand_int[1] - half_patch):(rand_int[1] + half_patch)]
-        y_patch = y[(rand_int[0] - half_patch):(rand_int[0] + half_patch), (rand_int[1] - half_patch):(rand_int[1] + half_patch)]
+        # y_flat = y.reshape(xshape * yshape)
 
-        X[n, :, :, 0] = x_patch[:, :]
-        Y[n, :, :, 0] = y_patch[:, :]
+        # convert to binary mask
+        y[y > 0] = 1
 
-        # full image to display where patch is in image
-        X_full[n, :, :, 0] = x[:, :]
-        Y_full[n, :, :, 0] = y[:, :]
+        X[n, :, :, 0] = x[:, :]
+        Y[n, :, :, 0] = y[:, :]
 
-    return X, Y #, X_full, Y_full, rand_ints
+    return X, Y
+
+
+def load_batch_patch_training(img_names, imgs_dir, segs_dir, patch_size):
+    '''
+    Batch generator for patch images
+    '''
+    # empty array for batch
+    X = np.zeros((len(img_names), patch_size, patch_size, 1), dtype='float32')
+    Y = np.zeros((len(img_names), patch_size, patch_size, 1), dtype='float32')
+
+    for n, i in enumerate(img_names):
+        
+        # path names
+        id = i.split('-')[0] + '-' + i.split('-')[1]
+        img_path = os.path.join(imgs_dir, i)
+        seg_path = os.path.join(segs_dir, id + '-seg.png')
+
+        # load img data
+        img_data = cv2.imread(img_path, 0)
+
+        # normalize data
+        img_data = (img_data - np.min(img_data))/np.ptp(img_data)
+
+        # load seg data
+        seg_data = cv2.imread(seg_path, 0)
+        seg_data[seg_data == 255] = 1
+
+        X[n, :, :, 0] = img_data
+        Y[n, :, :, 0] = seg_data
+
+    return X, Y
 
 
 def blockshaped(arr, nrows, ncols):
@@ -97,7 +115,9 @@ def unblockshaped(arr, h, w):
                .reshape(h, w))
 
 def test_batch(img_name, xshape, yshape, n_channels, patch_size):
-
+    '''
+    Load a batch of patches for model inference
+    '''
     n_patches = int((xshape*yshape)/(patch_size*patch_size))
     img_data = Image.open(img_name).convert('LA')
     img_data = img_data.resize((xshape, yshape), resample=Image.BILINEAR)
@@ -118,88 +138,21 @@ def test_batch(img_name, xshape, yshape, n_channels, patch_size):
     return patches_final
 
 
-def create_image_img_folder(ouput_dir, patch_size, n_patches):
-    '''
-    Creates dataset of image patches
-    '''
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-n4\*')
-    training_files = [i for i in files if 'training.png' in i]
-    segs_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
+def guass_noise(image):
 
-    img_dir = os.path.join(ouput_dir, 'imgs')
-    seg_dir = os.path.join(ouput_dir, 'segs')
+    x = np.random.randint(0, 3000)
+    if x % 3 == 0:
+        row,col,ch= image.shape
+        mean = 0
+        var = 0.1
+        sigma = var**0.5
+        gauss = np.random.normal(mean,sigma,(row,col,ch))
+        gauss = gauss.reshape(row,col,ch)
+        noisy = image + gauss
+        return noisy
+    else:
+        return image
 
-    os.mkdir(img_dir)
-    os.mkdir(seg_dir)
-
-    half_patch = int(patch_size/2)
-
-    for n, img in enumerate(training_files):
-
-        x = np.zeros((576, 576), dtype='float32')
-        y = np.zeros((576, 576), dtype='float32')
-
-        # load in image and segmentation
-        img_id = os.path.basename(img)[0:2]
-        seg_name = os.path.join(segs_dir, img_id + '_manual1.gif')
-        log(1, seg_name)
-        img_data = Image.open(img).convert('LA')
-        seg_data = Image.open(seg_name).convert('LA')
-        
-        # reshape data:
-        img_data = img_data.resize((576, 576), resample=Image.BILINEAR)
-        seg_data = seg_data.resize((576, 576), resample=Image.NEAREST)
-        x[:, :] = np.array(img_data)[:, :, 0]
-
-        # normalise data [0, 1]
-        x = (x - np.min(x))/np.ptp(x)
-
-        y[:, :] = np.array(seg_data)[:, :, 0]
-
-        # convert 255 to 1
-        y[y == 255] = 1
-
-        for n_patch in range(n_patches):
-
-            # extract random patch
-            rand_int = np.random.randint(half_patch, high=(576 - half_patch), size=2)
-            x_patch = x[(rand_int[0] - half_patch):(rand_int[0] + half_patch), (rand_int[1] - half_patch):(rand_int[1] + half_patch)]
-            y_patch = y[(rand_int[0] - half_patch):(rand_int[0] + half_patch), (rand_int[1] - half_patch):(rand_int[1] + half_patch)]   
-
-            # save patches
-            img_save_name = os.path.join(img_dir, f'{img_id}-{n_patch}-img.png')
-            seg_save_name = os.path.join(seg_dir, f'{img_id}-{n_patch}-seg.png')
-            plt.imsave(img_save_name, x_patch, cmap='gray')
-            plt.imsave(seg_save_name, y_patch, cmap='gray')
-
-
-def load_batch_patch_training(img_names, imgs_dir, segs_dir, patch_size):
-
-    # empty array for batch
-    X = np.zeros((len(img_names), patch_size, patch_size, 1), dtype='float32')
-    Y = np.zeros((len(img_names), patch_size, patch_size, 1), dtype='float32')
-
-    for n, i in enumerate(img_names):
-        
-        # path names
-        id = i.split('-')[0] + '-' + i.split('-')[1]
-        img_path = os.path.join(imgs_dir, i)
-        seg_path = os.path.join(segs_dir, id + '-seg.png')
-
-        # load img data
-        img_data = cv2.imread(img_path, 0)
-
-        # normalize data
-        img_data = (img_data - np.min(img_data))/np.ptp(img_data)
-
-        # load seg data
-        seg_data = cv2.imread(seg_path, 0)
-        seg_data[seg_data == 255] = 1
-
-        X[n, :, :, 0] = img_data
-        Y[n, :, :, 0] = seg_data
-
-    return X, Y
 
 
 if __name__ == '__main__':
@@ -230,6 +183,4 @@ if __name__ == '__main__':
     def test_inference_loading():
         test_batch(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-n4\01_test.png', params['image_size_x'], params['image_size_y'], 1, params['patch_size'])
 
-    # testing()
-    # test_inference_loading()
-    create_image_img_folder(r'C:\Users\James\Projects\final-year-project\data\drive_patches\n4-64', 64, 5000)
+    create_image_img_folder(r'C:\Users\James\Projects\final-year-project\data\drive_patches\clahe-n4-64', 64, 5000)

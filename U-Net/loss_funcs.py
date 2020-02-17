@@ -4,7 +4,7 @@ from params import params
 
 def bce(y_true, y_pred):
     loss = K.binary_crossentropy(y_true, y_pred)
-    return loass
+    return loss
 
 def weighted_bce(y_true, y_pred):
     '''

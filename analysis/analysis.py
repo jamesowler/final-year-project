@@ -58,8 +58,10 @@ def correlated_ttest_(n_folds, classifier1, classifier2):
     p_acc = bst.correlated_ttest(accuray_diff, 0.001,  runs=n_folds)
     p_roc = bst.correlated_ttest(roc_diff, 0.001, runs=n_folds)
 
-    print('Accuracy stats: ', np.sum(accuray_diff))
+    print('Accuracy stats: ', np.max(accuray_diff))
     print(p_acc, p_roc)
 
 if __name__ == '__main__':
+    # correlated_ttest_(5, 'mixed_drive_n4_plus_clahe_gmm', 'mixed_drive_gmm')
     correlated_ttest_(5, 'mixed_drive_n4_gmm', 'mixed_drive_gmm')
+

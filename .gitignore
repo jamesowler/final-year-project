@@ -6,6 +6,9 @@ __pycache__
 
 data
 losses.txt
+accuries.txt
+val_accuries.txt
+val_losses.txt
 
 U-Net/models
 

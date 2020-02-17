@@ -1,20 +1,39 @@
 params = {}
 params['image_size_x'] = 576
 params['image_size_y'] = 576
-params['patch_size'] = 64
-params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\drive_patches\clahe-64-large'
 
+# full image training #####
+params['full_img_n_epochs'] = 250
+
+# patch training params #####
+params['patch_size'] = 96
+params['preprocessing'] = '\clahe'
+params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\drive_patches' + params['preprocessing'] + '-' + str(params['patch_size'])
+params['n_epochs'] = 10
+params['batch_size'] = 20
 params['n_patches'] = int((params['image_size_x']*params['image_size_y'])/(params['patch_size']*params['patch_size']))
 
 params['n_channels'] = 1
 params['n_classes'] = 1
 
-params['learning_rate'] = 1e-6
-params['loss_method'] = 'weighted_bce'
-params['loss_weight'] = 3
+#### Training options
+params['learning_rate'] = 1e-4
+params['loss_method'] = 'bce' #bce or weight_bce
+params['loss_weight'] = 5
 
-params['model'] = 'model_2d_u_net_shallow'
+'''
+Model options:
 
-params['n_epochs'] = 15
-params['batch_size'] = 30
+- MultiResUnet          : train MultiResUnet with patches
+- MultiResUnet_full     : train MultiResUnet with full resolution images
+- MultiResUnet_shallow  : train shallow MultiResUnet with patches
+
+- unet                  : train unet with patches
+- unet_full             : train unet with full resolution images
+- unet_shallow          : trian shallow unet with patches
+
+'''
+
+params['model'] = 'MultiResUnet'
+params['weights'] = None # None or r'C:\Users\James\Projects\final-year-project\patch_model_25.h5'
 params['val_proportion'] = 0.1
