@@ -183,7 +183,7 @@ if __name__ == '__main__':
                 f.write('\n')
 
     
-    multi_epoch_pred(first_epoch=1, final_epoch=1, step=1, full=None)
+    multi_epoch_pred(first_epoch=20, final_epoch=20, step=1, full=None)
     
     # multi_epoch_pred(first_epoch=50, final_epoch=250, step=50, full=True)
 

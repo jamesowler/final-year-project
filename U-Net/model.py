@@ -322,8 +322,8 @@ def model_2d_u_net_shallow(params):
 
 
 if __name__ == '__main__':
-    model = model_2d_u_net(params)
-    model.save_weights(r'C:\Users\James\Projects\final-year-project\initial_weights_unet.h5')
+    model = model_2d_u_net_shallow(params)
+    model.save_weights(r'C:\Users\James\Projects\final-year-project\initial_weights_unet_shallow.h5')
     # plot_model(model, './model_diagram.png', show_shapes=True)
     print(model.summary())
 
