@@ -1,4 +1,5 @@
 import os
+import shutil
 import glob
 import numpy as np
 from PIL import Image
@@ -58,13 +59,17 @@ def create_dataset(input_dir, ouput_dir):
                 plt.imsave(img_save_name, x_patch, cmap='gray')
                 plt.imsave(seg_save_name, y_patch, cmap='gray')
 
-def create_image_img_folder(ouput_dir, patch_size, n_patches):
+def create_image_img_folder(ouput_dir, patch_size, n_patches, mode='drive'):
     '''
     Creates dataset of image patches
     '''
 
     # segs
-    segs_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
+    if mode == 'drive':
+        segs_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
+
+    if mode == 'chase_db1':
+        segs_dir = r'C:\Users\James\Projects\final-year-project\data\CHASE_DB1\masks'
 
     # green channel
     files_1 = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-green' + '\*')
@@ -111,52 +116,50 @@ def create_image_img_folder(ouput_dir, patch_size, n_patches):
         n += 1
         print(f'\r {n}/20 extracting patches')
 
-        x_1 = np.zeros((576, 576), dtype='float32')
-        x_2 = np.zeros((576, 576), dtype='float32')
-        x_3 = np.zeros((576, 576), dtype='float32')
-        x_4 = np.zeros((576, 576), dtype='float32')
-
-        y = np.zeros((576, 576), dtype='float32')
-
         # load in image and segmentation
-        img_id = os.path.basename(img_1)[0:2]
-        seg_name = os.path.join(segs_dir, img_id + '_manual1.gif')
+        if mode == 'drive':
+            img_id = os.path.basename(img_1)[0:2]
+            seg_name = os.path.join(segs_dir, img_id + '_manual1.gif')
+
+        if mode == 'chase_db1':
+            img_id = os.path.basename(img_1)[0:3]
+            seg_name = os.path.join(segs_dir, f'Image_{img_id}_1stHO.png')
+
         seg_data = Image.open(seg_name).convert('LA')
-        seg_data = seg_data.resize((576, 576), resample=Image.NEAREST)
+
         # process seg data
-        y[:, :] = np.array(seg_data)[:, :, 0]
+        y = np.array(seg_data)[:, :, 0]
+
+        height, width = np.shape(y)[0], np.shape(y)[1]
+        
         # convert 255 to 1
         y[y == 255] = 1
 
         # 1
         img_data = Image.open(img_1).convert('LA')
         # reshape data:
-        img_data = img_data.resize((576, 576), resample=Image.BILINEAR)
-        x_1[:, :] = np.array(img_data)[:, :, 0]
+        x_1 = np.array(img_data)[:, :, 0]
         # normalise data [0, 1]
         x_1 = (x_1 - np.min(x_1))/np.ptp(x_1)
 
         # 2
         img_data = Image.open(img_2).convert('LA')
-        img_data = img_data.resize((576, 576), resample=Image.BILINEAR)
-        x_2[:, :] = np.array(img_data)[:, :, 0]
+        x_2 = np.array(img_data)[:, :, 0]
         x_2 = (x_2 - np.min(x_2))/np.ptp(x_2)
 
         # 3
         img_data = Image.open(img_3).convert('LA')
-        img_data = img_data.resize((576, 576), resample=Image.BILINEAR)
-        x_3[:, :] = np.array(img_data)[:, :, 0]
+        x_3 = np.array(img_data)[:, :, 0]
         x_3 = (x_3 - np.min(x_3))/np.ptp(x_3)
 
         # 4
         img_data = Image.open(img_4).convert('LA')
-        img_data = img_data.resize((576, 576), resample=Image.BILINEAR)
-        x_4[:, :] = np.array(img_data)[:, :, 0]
+        x_4 = np.array(img_data)[:, :, 0]
         x_4 = (x_4 - np.min(x_4))/np.ptp(x_4)
 
         for n_patch in range(n_patches):
             # extract random patch
-            rand_int = np.random.randint(half_patch, high=(576 - half_patch), size=2)
+            rand_int = [np.random.randint(half_patch, high=(height - half_patch)), np.random.randint(half_patch, high=(width - half_patch))]
             
             # for each type of preprocessed image
             x_patch_1 = x_1[(rand_int[0] - half_patch):(rand_int[0] + half_patch), (rand_int[1] - half_patch):(rand_int[1] + half_patch)]
@@ -187,5 +190,20 @@ def create_image_img_folder(ouput_dir, patch_size, n_patches):
             plt.imsave(img_save_name, x_patch_4, cmap='gray')
             plt.imsave(seg_save_name, y_patch, cmap='gray')
 
+def rename_chase_files(input_dir):
+    for i in os.listdir(input_dir)[0:20]:
+        img_id = i[6:9]
+        new_name = img_id + '_training.png'
+        old_path = os.path.join(input_dir, i)
+        new_path = os.path.join(input_dir, new_name)
+        shutil.move(old_path, new_path)
+
+    for i in os.listdir(input_dir)[20:]:
+        img_id = i[6:9]
+        new_name = img_id + '_testing.png'
+        old_path = os.path.join(input_dir, i)
+        new_path = os.path.join(input_dir, new_name)
+        shutil.move(old_path, new_path)
+
 if __name__ == '__main__':
-    create_image_img_folder(r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive-', 64, 5000)
+    create_image_img_folder(r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive_128-', 128, 3000, mode='drive') 

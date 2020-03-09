@@ -10,80 +10,10 @@ from keras.models import load_model
 from keras.optimizers import Adam
 
 from params import params
-from data_utils import load_batch_patch_training, load_batch_v1, guass_noise
+from data_utils import load_batch_patch_training, guass_noise
 from model import model_2d_u_net, model_2d_u_net_shallow, model_2d_u_net_full
 from test_model import MultiResUnet_shallow, MultiResUnet
 import loss_funcs
-
-def train(params, model):
-
-    '''
-    Trains model on full resolution images
-    '''
-
-    start_training = time.time()
-
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-' + params['preprocessing'][1:] + '\*')
-    training_files_full = [i for i in files if 'training.png' in i]
-    seg_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
-    
-    loss = []
-
-    # begin training
-    for e in range(1, params['full_img_n_epochs'] + 1):
-        
-        random.shuffle(training_files_full)
-        training_list = [[x] for x in training_files_full]
-        print('Epoch: ', e)
-
-        epoch_loss = []
-        epoch_acc = []
-
-        for n, training_files in enumerate(training_list):
-
-            # load full sized image
-            X, Y = load_batch_v1(training_files, seg_dir, params['image_size_x'], params['image_size_y'], 1)
-
-            seed = np.random.randint(0, 10000)
-            data_gen_args = dict(rotation_range=10.,
-                                fill_mode='constant',
-                                horizontal_flip=True,
-                                vertical_flip=True,
-                                cval=0)
-
-            image_datagen = ImageDataGenerator(**data_gen_args)
-            mask_datagen = ImageDataGenerator(**data_gen_args)
-
-            image_datagen.fit(X, augment=True, seed=seed)
-            mask_datagen.fit(Y, augment=True, seed=seed)
-
-            image_generator = image_datagen.flow(X, seed=seed)
-            mask_generator = mask_datagen.flow(Y, seed=seed)
-            train_generator = zip(image_generator, mask_generator)
-
-            batches = 0
-
-            for X_batch, Y_batch in train_generator:
-                Y_out = Y_batch.reshape((len(training_files), params['image_size_x'] * params['image_size_y'], 1))
-                l1 = model.train_on_batch(X_batch, Y_out)
-                loss.append(l1)
-                batches =+ 1
-                end = "" if n < 19 else "\n"
-                print("\r{}/20 - ".format(n + 1) + '{:.4f}'.format(l1[0]) + ', ' + '{:.4f}'.format(l1[1]), end = end)
-                epoch_loss.append(l1[0])
-                epoch_acc.append(l1[1])
-
-                if batches >= 1:
-                    break
-            
-            if e % 50 == 0:
-                model.save_weights(f'./patch_model_{str(e)}.h5')
-
-        print('Averages {:.4f}, {:.4f} \n'.format(np.mean(epoch_loss), np.mean(epoch_acc)))
-
-    with open('./losses.txt', 'w') as f:
-        for i in loss:
-            f.write(str(i) + '\n')
 
 
 def train_from_data_dir(params, model):

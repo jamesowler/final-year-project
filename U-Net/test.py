@@ -42,6 +42,9 @@ def accuracy(pred_file, gt_file, fov_filename):
     if np.max(img1) == 215:
         img1[img1 == 30] = 0
         img1[img1 == 215] = 1
+    else:
+        img1[img1 == 0] = 0
+        img1[img1 == 255] = 1
 
     img2 = np.array(Image.open(gt_file).convert('LA'))[:, :, 0]
     img2[img2 == 255] = 1
@@ -94,10 +97,15 @@ def non_fov_accuracy(pred_file, gt_file):
     return accuray
 
 
-def multi_test(results_dir, filter1, filter2, epoch_num=None):
+def multi_test(results_dir, filter1, filter2, epoch_num=None, mode='drive'):
 
-    fov_files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\mask\*')
-    seg_ground_truths = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\1st_manual\*')
+    if mode == 'chase_db1':
+        fov_files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\CHASE_DB1\testing\*')
+        seg_ground_truths = glob.glob(r'C:\Users\James\Projects\final-year-project\data\CHASE_DB1\testing\*.png')
+
+    if mode == 'drive':
+        fov_files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\mask\*')
+        seg_ground_truths = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\1st_manual\*')
 
     test_results = []
     test_results_eval = []
@@ -124,14 +132,34 @@ def multi_test(results_dir, filter1, filter2, epoch_num=None):
 
     print(aucs, '\n \n', accs)
     print()
-    print('AUC:', np.mean(aucs), '\nAccuracy: ', np.mean(accs), '\nNon FOV Accuracy', np.mean(non_fov_accs))
+    print('AUC:', '{:.4f}'.format(np.mean(aucs)), '\nAccuracy: ', '{:.4f}'.format(np.mean(accs)), '\nNon FOV Accuracy', np.mean(non_fov_accs))
 
     return np.mean(aucs), np.mean(accs)
 
+
+def plot(img1, img2, img3):
+    img1 = np.array(Image.open(img1).convert('LA'))[:, :, 0]
+    img2 = np.array(Image.open(img2).convert('LA'))[:, :, 0]
+    img3 = np.array(Image.open(img3).convert('LA'))[:, :, 0]
+
+    plt.figure(1)
+    plt.imshow(img1, cmap='gray')
+    plt.imshow(img2, alpha=0.5, cmap='cool')
+
+    plt.figure(2)
+    plt.imshow(img1, cmap='gray')
+
+    if np.max(img3) == 215:
+        img3[img3 == 30] = 0
+        img3[img3 == 215] = 1
+
+    plt.imshow(img3, alpha=0.5, cmap='cool')
+
+    plt.show()
+
 if __name__ == '__main__':
         
-    # multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-test-1', 'seg.png', 'seg-eval.png')
-    multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3', 'seg.png', 'seg-eval.png')
+    # multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-Soares', 'class.png', '-eval.png')
+    multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2-BEST', 'seg.png', 'seg-eval.png')
 
-    # multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-Soares', 'class.png', 'gray-eval')
-
+    # print(accuracy(r'C:\Users\James\Projects\final-year-project\Wei-Sam\Matlab-Code\mlvessel-1.4\results\mixed_drive_gmm\01_test\01_test-class.png', r'C:\Users\James\Projects\final-year-project\Wei-Sam\Matlab-Code\mlvessel-1.4\results\mixed_drive_gmm\01_test\01_test-manual-class.png', r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks\40_manual1.gif'))

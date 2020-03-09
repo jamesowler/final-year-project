@@ -1,5 +1,6 @@
 import os
 import glob
+import shutil
 
 import cv2
 import numpy as np
@@ -40,8 +41,11 @@ def patch_inferance(filename, model_file, save_dir, model_type):
     model.load_weights(model_file)
 
     y_full = cv2.imread(filename, 0)
-    height, width = y_full.shape
-    
+    width, height = y_full.shape
+    params['image_size_x'] = int(np.ceil(width/params['patch_size']))*params['patch_size']
+    params['image_size_y'] = int(np.ceil(height/params['patch_size']))*params['patch_size']
+    params['n_patches'] = int((params['image_size_x']*params['image_size_y'])/(params['patch_size']*params['patch_size']))
+
     y_batch = test_batch(filename, params['image_size_x'], params['image_size_y'], params['n_channels'], params['patch_size'])
 
     y_pred = model.predict_on_batch(y_batch)
@@ -49,86 +53,30 @@ def patch_inferance(filename, model_file, save_dir, model_type):
     print(y_pred.shape)
     y_pred_full = unblockshaped(y_pred[:, :, :, 0], params['image_size_x'], params['image_size_y'])
 
+    y_pred_full = y_pred_full[:width, :height]
     Y_pred_full_eval = np.copy(y_pred_full)
 
     y_pred_full[y_pred_full < 0.5] = 0
     y_pred_full[y_pred_full >= 0.5] = 1
     plt.imshow(y_pred_full, cmap='gray')
-    # plt.show()
 
     #TODO 
     file_basename = os.path.basename(filename)
     outfile_default = os.path.join(save_dir, file_basename.split(".")[0] + '-seg.png')
     outfile_default_eval = os.path.join(save_dir, file_basename.split(".")[0] + '-seg-eval.png')
-    
-    y_pred_full = cv2.resize(y_pred_full, (width, height), interpolation=cv2.INTER_NEAREST)
-    Y_pred_full_eval = cv2.resize(Y_pred_full_eval, (width, height), interpolation=cv2.INTER_NEAREST)
 
     # save final segmentation mask and segmenation probabilities
     plt.imsave(outfile_default, y_pred_full)
     plt.imsave(outfile_default_eval, Y_pred_full_eval)
 
+def multi_predict(model_file, outputdir, prepro, mode='drive'):
+    if mode == 'drive':
+        files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-' + prepro + '\*')
 
+    if mode == 'chase_db1':
+        files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\CHASE_DB1\imgs-' + prepro + '\*')
 
-def predict(params, filename, model_name, save_dir):
-
-    '''
-    Predicts segmentation mask of retinal blood vessels given an image of the retina
-    '''
-
-    # img_data = Image.open(filename).convert('LA')
-    # width, height = img_data.size
-    # img_data = img_data.resize((params['image_size_x'], params['image_size_y']), resample=Image.BILINEAR)
-    
-    x = np.zeros((1, params['image_size_x'], params['image_size_y'], 1))
-    img_data_org = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-    width, height = img_data_org.shape
-    img_data = cv2.resize(img_data_org, (params['image_size_x'], params['image_size_y']), interpolation = cv2.INTER_LINEAR)
-
-
-    # load and use model to predict vessels
-    x[0, :, :, 0] = img_data
-    x = (x - np.min(x))/np.ptp(x)
-
-    print(x.shape)
-    model = MultiResUnet(params['image_size_x'], params['image_size_y'], 1)
-    model.load_weights(model_name)
-
-    # predict output 
-    y_pred = model.predict(x)
-
-    # reshape output back into image
-    y_pred = np.reshape(y_pred, (params['image_size_x'], params['image_size_y']))
-    # segmentation probability map
-    Y_pred_full_eval = np.copy(y_pred) 
-    # final tresholded segmentaiton
-    y_pred[y_pred < 0.5] = 0
-    y_pred[y_pred > 0.5] = 1
-    
-    y_pred_resized = cv2.resize(y_pred, (height, width), interpolation = cv2.INTER_NEAREST)
-    Y_pred_full_eval = cv2.resize(Y_pred_full_eval, (height, width), interpolation = cv2.INTER_LINEAR)
-
-    file_basename = os.path.basename(filename)
-    outfile_default = os.path.join(save_dir, file_basename.split(".")[0] + '-seg.png')
-    outfile_default_eval = os.path.join(save_dir, file_basename.split(".")[0] + '-seg-eval.png')
-
-    # save final segmentation mask and segmenation probabilities
-    plt.imsave(outfile_default, y_pred_resized)
-    plt.imsave(outfile_default_eval, Y_pred_full_eval)
-
-    # # Need to display the result of imshow on an axis
-    # fig, ax = plt.subplots()
-    # ax.imshow(img_data_org, cmap='gray')
-    # ax.imshow(y_pred_resized, alpha=0.15)
-    # ax.set_axis_off()
-    # plt.savefig(outfile_default_seg_combined, dpi=200)
-
-    return y_pred_resized
-
-
-def multi_predict(model_file, outputdir):
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-' + params['preprocessing'] + '\*')
-    test_files = [i for i in files if 'test.png' in i]
+    test_files = [i for i in files if 'test' in i]
 
     for i in test_files:
         patch_inferance(i, model_file, outputdir, params['model'])
@@ -136,55 +84,114 @@ def multi_predict(model_file, outputdir):
         # clear session to try and avoid memory leakage when calling function in a loop
         K.clear_session()
 
-def multi_predict_full(model_file, outputdir):
-    files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-' + params['preprocessing'][1:] + '\*')
-    test_files = [i for i in files if 'test.png' in i]
+def multi_epoch_pred(first_epoch=1, final_epoch=16, step=1, full=None, mode='chase_db1'):
 
-    for i in test_files:
-        predict(params, i, model_file, outputdir)
+    '''
+    Output aucs and accs to results.txt file for multiple classiers (saved at different epochs in he training process)
+    '''
 
-        # clear session to try and avoid memory leakage when calling function in a loop
-        K.clear_session()
+    results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4'
+    
+    accs = []
+    aucs = []
+    epochs = []
 
-if __name__ == '__main__':
+    # obtain predicted segmentation masks
+    for epoch in range(first_epoch, final_epoch + 1, step):
+        epochs.append(epoch)
 
-    def multi_epoch_pred(first_epoch=1, final_epoch=15, step=1, full=None):
+        if not full:
+            multi_predict(r'C:\Users\James\Projects\final-year-project\patch_model_' + str(epoch) + '.h5', results_dir, 'n4-clahe', mode=mode)
 
-        '''
-        Output aucs and accs to results.txt file for multiple classiers (saved at different epochs in he training process)
-        '''
+        if full:
+            multi_predict_full(r'C:\Users\James\Projects\final-year-project\patch_model_' + str(epoch) + '.h5', results_dir)
 
-        results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-2'
-        
+        # calc stats
+        auc, acc = multi_test(results_dir, 'seg.png', 'seg-eval.png', epoch_num=epoch, mode=mode)
+        accs.append(acc)
+        aucs.append(auc)
+
+    with open('./results.txt', 'w') as f:
+        for i, j in zip(accs, aucs):
+            f.write(str(j) + ',')
+            f.write(str(i))
+            f.write('\n')
+
+def pred_prepro():
+    '''
+    Returns text file of results for each model type and preprocessing method
+    '''
+
+    for pre_pro in ['clahe', 'green', 'n4', 'n4-clahe']:
+
+        results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4'
+        models = ['unet_shallow', 'unet']
+        # models = ['unet_shallow']
+
+        model_folders = [r'C:\Users\James\Desktop\seg_test\processed_data_testing\\' + pre_pro + r'\Shallow_Unet', r'C:\Users\James\Desktop\seg_test\processed_data_testing\\' + pre_pro + r'\Unet']
+
+        # model_folders = [r'C:\Users\James\Desktop\seg_test\processed_data_testing\\' + pre_pro + r'\Shallow_Unet']
+
+        for model, folder in zip(models, model_folders):
+            params['model'] = model
+            accs = []
+            aucs = []
+            for epoch in range(1, 16):
+                print(pre_pro, model, str(epoch))
+                multi_predict(folder + r'\patch_model_' + str(epoch) + '.h5', results_dir, pre_pro)
+                auc, acc = multi_test(results_dir, 'seg.png', 'seg-eval.png', epoch_num=epoch)
+                accs.append(acc)
+                aucs.append(auc)
+
+            with open('./accs.txt', 'w') as f:
+                for i in accs:
+                    f.write(str(i))
+                    f.write('\n')
+
+            with open('./aucs.txt', 'w') as f:
+                for i in aucs:
+                    f.write(str(i))
+                    f.write('\n')
+
+            shutil.copy('./accs.txt', os.path.join(folder, 'accs.txt'))  
+            shutil.copy('./aucs.txt', os.path.join(folder, 'aucs.txt'))
+
+def pred_prepro_chase():
+    # TODO - impliment chase_db1 inference 
+    for pre_pro in ['clahe', 'green', 'n4', 'n4-clahe']:
+
+        results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4'
+        models = ['unet_shallow', 'unet']
+        # models = ['unet_shallow']
+
+        folder = r'C:\Users\James\Desktop\seg_test\processed_data_testing\CHASE_DB1\\' + pre_pro
+
         accs = []
         aucs = []
-        epochs = []
-
-        # obtain predicted segmentation masks
-        for epoch in range(first_epoch, final_epoch + 1, step):
-            epochs.append(epoch)
-
-            if not full:
-                multi_predict(r'C:\Users\James\Projects\final-year-project\patch_model_' + str(epoch) + '.h5', results_dir)
-
-            if full:
-                multi_predict_full(r'C:\Users\James\Projects\final-year-project\patch_model_' + str(epoch) + '.h5', results_dir)
-
-            # calc stats
-            auc, acc = multi_test(results_dir, 'seg.png', 'seg-eval.png', epoch_num=epoch)
+        for epoch in range(1, 16):
+            print(pre_pro, str(epoch))
+            multi_predict(folder + r'\patch_model_' + str(epoch) + '.h5', results_dir, pre_pro, mode='chase_db1')
+            auc, acc = multi_test(results_dir, 'seg.png', 'seg-eval.png', epoch_num=epoch, mode='chase_db1')
             accs.append(acc)
             aucs.append(auc)
 
-        with open('./results.txt', 'w') as f:
-            for i, j, k in zip(accs, aucs, epochs):
-                f.write(str(k) + '- ')
-                f.write('AUC: ' + str(j) + ' ')
-                f.write('Accuracy: ' + str(i))
+        with open('./accs.txt', 'w') as f:
+            for i in accs:
+                f.write(str(i))
                 f.write('\n')
 
-    
-    multi_epoch_pred(first_epoch=20, final_epoch=20, step=1, full=None)
-    
-    # multi_epoch_pred(first_epoch=50, final_epoch=250, step=50, full=True)
+        with open('./aucs.txt', 'w') as f:
+            for i in aucs:
+                f.write(str(i))
+                f.write('\n')
 
-    # patch_inferance(r'C:\Users\James\Desktop\seg_test\0a74c92e287c-preprocessed.png',  r'C:\Users\James\Projects\final-year-project\U-Net\models\best\patch_model_64_16_shallow_unet.h5', r'C:\Users\James\Desktop\seg_test', 'unet_shallow')
+        shutil.copy('./accs.txt', os.path.join(folder, 'accs.txt'))  
+        shutil.copy('./aucs.txt', os.path.join(folder, 'aucs.txt'))
+
+
+if __name__ == '__main__':
+
+    # multi_predict(r'C:\Users\James\Desktop\seg_test\processed_data_testing\CHASE_DB1\clahe\patch_model_2.h5', r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4', 'n4-clahe', mode='chase_db1')
+    # multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4', 'seg', 'seg-eval', mode='chase_db1')
+    multi_epoch_pred()
+    # pred_prepro_chase()

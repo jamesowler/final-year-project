@@ -1,15 +1,18 @@
 import shutil
 import os
 import keras.backend as K
+from keras.optimizers import Adam
 
 from train import train_from_data_dir
 from model import model_2d_u_net, model_2d_u_net_shallow
+from test_model import MultiResUnet
+import loss_funcs
 from params import params
 
 
 def copy_files(prepro_method):
     
-    save_dir = r'C:\Users\James\Desktop\seg_test\processed_data_testing'
+    save_dir = r'C:\Users\James\Desktop\seg_test\processed_data_testing\DRIVE-128'
     
     model_files = [r'C:\Users\James\Projects\final-year-project\patch_model_{}.h5'.format(str(i)) for i in range(1, params['n_epochs'] + 1)]
 
@@ -22,46 +25,81 @@ def copy_files(prepro_method):
     shutil.copy(r'C:\Users\James\Projects\final-year-project\accuries.txt', save_dir + f'\{prepro_method}' + r'\accuracies.txt')
 
 
-def multi_train():
+def multi_train(mode='unet'):
     '''
     Trains models for different preprocessing methods - copies models and results over to new directory
     '''
 
-    # # train green
-    # model = model_2d_u_net_shallow(params)
-    # model.load_weights(params['weights'])
-    # params['preprocessing'] = 'green'
-    # params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive-' + params['preprocessing']
-    # train_from_data_dir(params, model)
-    # copy_files('green')
-    # K.clear_session()
+    training_data = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive_128-'
+
+    # train green
+    if mode == 'resunet':
+        model = MultiResUnet(params['patch_size'], params['patch_size'], 1)
+        loss_mathod = getattr(loss_funcs, params['loss_method'])
+        model.compile(loss=loss_mathod, metrics=['accuracy'], optimizer=Adam(lr=float(params['learning_rate'])))
+        params['weights'] = r'C:\Users\James\Projects\final-year-project\initial_weights_multiresunet.h5'
+    elif mode == 'unet':
+        model = model_2d_u_net(params)
+    elif mode == 'unet_shallow':
+        model = model_2d_u_net_shallow(params)
+
+    model.load_weights(params['weights'])
+    params['preprocessing'] = 'green'
+    params['data_dir'] = training_data + params['preprocessing']
+    train_from_data_dir(params, model)
+    copy_files('green')
+    K.clear_session()
 
     # train n4
-    model = model_2d_u_net_shallow(params)
+    if mode == 'resunet':
+        model = MultiResUnet(params['patch_size'], params['patch_size'], 1)
+        loss_mathod = getattr(loss_funcs, params['loss_method'])
+        model.compile(loss=loss_mathod, metrics=['accuracy'], optimizer=Adam(lr=float(params['learning_rate'])))
+    elif mode == 'unet':
+        model = model_2d_u_net(params)
+    elif mode == 'unet_shallow':
+        model = model_2d_u_net_shallow(params)
+
     model.load_weights(params['weights'])
     params['preprocessing'] = 'n4'
-    params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive-' + params['preprocessing']
+    params['data_dir'] = training_data + params['preprocessing']
     train_from_data_dir(params, model)
     copy_files('n4')
     K.clear_session()
 
     # train clahe
-    model = model_2d_u_net_shallow(params)
+    if mode == 'resunet':
+        model = MultiResUnet(params['patch_size'], params['patch_size'], 1)
+        loss_mathod = getattr(loss_funcs, params['loss_method'])
+        model.compile(loss=loss_mathod, metrics=['accuracy'], optimizer=Adam(lr=float(params['learning_rate'])))
+    elif mode == 'unet':
+        model = model_2d_u_net(params)
+    elif mode == 'unet_shallow':
+        model = model_2d_u_net_shallow(params)
+
     model.load_weights(params['weights'])
     params['preprocessing'] = 'clahe'
-    params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive-' + params['preprocessing']
+    params['data_dir'] = training_data + params['preprocessing']
     train_from_data_dir(params, model)
     copy_files('clahe')
     K.clear_session()
 
     # train n4_clahe
-    model = model_2d_u_net_shallow(params)
+    if mode == 'resunet':
+        model = MultiResUnet(params['patch_size'], params['patch_size'], 1)
+        loss_mathod = getattr(loss_funcs, params['loss_method'])
+        model.compile(loss=loss_mathod, metrics=['accuracy'], optimizer=Adam(lr=float(params['learning_rate'])))
+    elif mode == 'unet':
+        model = model_2d_u_net(params)
+    elif mode == 'unet_shallow':
+        model = model_2d_u_net_shallow(params)
+        
     model.load_weights(params['weights'])
-    params['preprocessing'] = 'n4_clahe'
-    params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive-' + params['preprocessing']
+    params['preprocessing'] = 'n4-clahe'
+    params['data_dir'] = training_data + params['preprocessing']
     train_from_data_dir(params, model)
-    copy_files('n4_clahe')
+    copy_files('n4-clahe')
 
 
 if __name__ == '__main__':
-    multi_train()
+    multi_train(mode='unet')

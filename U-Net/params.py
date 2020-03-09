@@ -1,17 +1,11 @@
 params = {}
-params['image_size_x'] = 576
-params['image_size_y'] = 576
-
-# full image training #####
-params['full_img_n_epochs'] = 250
 
 # patch training params #####
-params['patch_size'] = 64
+params['patch_size'] = 128
 params['preprocessing'] = 'clahe'
-params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive-' + params['preprocessing']
-params['n_epochs'] = 20
+params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\chase_db1_128-' + params['preprocessing']
+params['n_epochs'] = 15
 params['batch_size'] = 25
-params['n_patches'] = int((params['image_size_x']*params['image_size_y'])/(params['patch_size']*params['patch_size']))
 
 params['n_channels'] = 1
 params['n_classes'] = 1
@@ -34,6 +28,7 @@ Model options:
 
 '''
 
-params['model'] = 'unet_shallow'
-params['weights'] = r'C:\Users\James\Projects\final-year-project\initial_weights_unet_shallow.h5'
-params['val_proportion'] = 0
+
+params['model'] = 'unet'
+params['weights'] = r'C:\Users\James\Projects\final-year-project\initial_weights_unet.h5'
+params['val_proportion'] = 0.0

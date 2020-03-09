@@ -255,9 +255,8 @@ def MultiResUnet_shallow(height, width, n_channels):
 def main():
 
     # Define the model
-
     model = MultiResUnet(64, 64, 1)
-    print(model.summary())
+    model.save_weights(r'C:\Users\James\Projects\final-year-project\initial_weights_multiresunet.h5')
 
 
 

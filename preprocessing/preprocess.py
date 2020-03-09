@@ -61,8 +61,6 @@ def extract_channel(image_name):
 
     img = cv2.imread(image_name)
     plt.imsave(img_directory + '/' + img_basename.split('.')[0] + '.png', img[:, :, 1], cmap='gray')
-    # plt.imshow(img[:, :, 1], cmap='gray')
-    # plt.show()
 
 
 if __name__ == '__main__':
@@ -75,4 +73,4 @@ if __name__ == '__main__':
     # preprocessing(args.file_path, save_dir=args.output_dir, n4=args.n4)
 
     # extract_channel(r'C:\Users\James\Documents\Uni\Final Project\content\pre-processing-examples\colour - Copy.png')
-    extract_channel(r'C:\Users\James\Projects\final-year-project\data\DRIVE\imgs\01_test.tif')
+    contrast_enhancement(r'C:\Users\James\Projects\final-year-project\data\CHASE_DB1\imgs-n4-clahe\Image_14R.png')

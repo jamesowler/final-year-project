@@ -11,50 +11,6 @@ from sklearn.feature_extraction.image import extract_patches_2d
 from params import params
 import loss_funcs
 
-
-def load_batch_v1(img_names, segs_dir, xshape, yshape, n_channels):
-    '''
-    Batch generator for full resolution images
-    '''
-    # create empty arrays with desired resampled size - for batch
-    X = np.zeros((len(img_names), xshape, yshape, n_channels), dtype='float32')
-    Y = np.zeros((len(img_names), xshape, yshape, 1), dtype='float32')
-
-    # for n subj in the batch
-    x = np.zeros((xshape, yshape), dtype='float32')
-    y = np.zeros((xshape, yshape), dtype='float32')
-
-    for n, img in enumerate(img_names):
-        
-        img_id = os.path.basename(img)[0:2]
-
-        seg_name = os.path.join(segs_dir, img_id + '_manual1.gif')
-        log(1, seg_name)
-
-        img_data = Image.open(img).convert('LA')
-        seg_data = Image.open(seg_name).convert('LA')
-
-        # reshape data:
-        img_data = img_data.resize((xshape, yshape), resample=Image.BILINEAR)
-        seg_data = seg_data.resize((xshape, yshape), resample=Image.NEAREST)
-
-        x[:, :] = np.array(img_data)[:, :, 0]
-        x = (x - np.min(x))/np.ptp(x)
-
-        # print(np.array(seg_data)[:, :, 0].shape)
-        y[:, :] = np.array(seg_data)[:, :, 0]
-
-        # y_flat = y.reshape(xshape * yshape)
-
-        # convert to binary mask
-        y[y > 0] = 1
-
-        X[n, :, :, 0] = x[:, :]
-        Y[n, :, :, 0] = y[:, :]
-
-    return X, Y
-
-
 def load_batch_patch_training(img_names, imgs_dir, segs_dir, patch_size):
     '''
     Batch generator for patch images
@@ -74,7 +30,8 @@ def load_batch_patch_training(img_names, imgs_dir, segs_dir, patch_size):
         img_data = cv2.imread(img_path, 0)
 
         # normalize data
-        img_data = (img_data - np.min(img_data))/np.ptp(img_data)
+        if np.max(img_data) != 0:
+            img_data = (img_data - np.min(img_data))/np.ptp(img_data)
 
         # load seg data
         seg_data = cv2.imread(seg_path, 0)
@@ -101,6 +58,7 @@ def blockshaped(arr, nrows, ncols):
                .swapaxes(1,2)
                .reshape(-1, nrows, ncols))
 
+
 def unblockshaped(arr, h, w):
     """
     Return an array of shape (h, w) where
@@ -114,22 +72,26 @@ def unblockshaped(arr, h, w):
                .swapaxes(1,2)
                .reshape(h, w))
 
+
 def test_batch(img_name, xshape, yshape, n_channels, patch_size):
     '''
     Load a batch of patches for model inference
     '''
     n_patches = int((xshape*yshape)/(patch_size*patch_size))
-    img_data = Image.open(img_name).convert('LA')
-    img_data = img_data.resize((xshape, yshape), resample=Image.BILINEAR)
-    
+    img_data = cv2.imread(img_name, 0)
+
     # normalise data [0, 1]
     img_data = np.array(img_data)
-    img_data = (img_data - np.min(img_data))/np.ptp(img_data)
+    
+    if np.max(img_data) != 0:
+        img_data = (img_data - np.min(img_data))/np.ptp(img_data)
 
     image = np.zeros((xshape, yshape), dtype='float32')
     patches_final = np.zeros((n_patches, patch_size, patch_size, n_channels), dtype='float32')
 
-    image[:, :] = np.array(img_data)[:, :, 0]
+    xlen = img_data.shape[0]
+    ylen = img_data.shape[1]
+    image[:xlen, :ylen] = img_data 
 
     patches = blockshaped(image, patch_size, patch_size)
 
