@@ -84,13 +84,13 @@ def multi_predict(model_file, outputdir, prepro, mode='drive'):
         # clear session to try and avoid memory leakage when calling function in a loop
         K.clear_session()
 
-def multi_epoch_pred(first_epoch=1, final_epoch=16, step=1, full=None, mode='chase_db1'):
+def multi_epoch_pred(first_epoch=1, final_epoch=15, step=1, full=None, mode='chase_db1'):
 
     '''
     Output aucs and accs to results.txt file for multiple classiers (saved at different epochs in he training process)
     '''
 
-    results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4'
+    results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3'
     
     accs = []
     aucs = []
@@ -124,7 +124,7 @@ def pred_prepro():
 
     for pre_pro in ['clahe', 'green', 'n4', 'n4-clahe']:
 
-        results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4'
+        results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3'
         models = ['unet_shallow', 'unet']
         # models = ['unet_shallow']
 
@@ -157,21 +157,18 @@ def pred_prepro():
             shutil.copy('./aucs.txt', os.path.join(folder, 'aucs.txt'))
 
 def pred_prepro_chase():
-    # TODO - impliment chase_db1 inference 
     for pre_pro in ['clahe', 'green', 'n4', 'n4-clahe']:
 
-        results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4'
-        models = ['unet_shallow', 'unet']
-        # models = ['unet_shallow']
+        results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3'
 
-        folder = r'C:\Users\James\Desktop\seg_test\processed_data_testing\CHASE_DB1\\' + pre_pro
+        folder = r'C:\Users\James\Desktop\seg_test\processed_data_testing\DRIVE-128\\' + pre_pro
 
         accs = []
         aucs = []
         for epoch in range(1, 16):
             print(pre_pro, str(epoch))
-            multi_predict(folder + r'\patch_model_' + str(epoch) + '.h5', results_dir, pre_pro, mode='chase_db1')
-            auc, acc = multi_test(results_dir, 'seg.png', 'seg-eval.png', epoch_num=epoch, mode='chase_db1')
+            multi_predict(folder + r'\patch_model_' + str(epoch) + '.h5', results_dir, pre_pro, mode='drive')
+            auc, acc = multi_test(results_dir, 'seg.png', 'seg-eval.png', epoch_num=epoch, mode='drive')
             accs.append(acc)
             aucs.append(auc)
 
@@ -188,10 +185,55 @@ def pred_prepro_chase():
         shutil.copy('./accs.txt', os.path.join(folder, 'accs.txt'))  
         shutil.copy('./aucs.txt', os.path.join(folder, 'aucs.txt'))
 
+def pred_prepro_stare(pre_pro='clahe'):
+    models_dir = r'C:\Users\James\Desktop\seg_test\processed_data_testing\STARE-128'
+    imgs_dir = r'C:\Users\James\Projects\final-year-project\data\STARE'
+    epoch_num = '2'
+    image_nums = [str(x) + '.png' for x in range(1, 21)]
+
+    output_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\STARE'
+
+    for img in image_nums:
+        
+        img_model_path = os.path.join(models_dir, img)
+        input_img = imgs_dir + f'\\imgs-{pre_pro}\\{img}'
+        mask_img = imgs_dir + f'\\masks\\{img}'
+        fov_img_name = img.split('.')[0] + '.gif'
+        fov_img = imgs_dir + f'\\fov_masks\\{fov_img_name}'
+        img_model_path_prepro = os.path.join(img_model_path, pre_pro)
+        img_model_path_prepro_model = os.path.join(img_model_path_prepro, f'patch_model_{epoch_num}.h5')
+
+        patch_inferance(input_img, img_model_path_prepro_model, output_dir, 'unet')
+
+    auc_mean, acc_mean, aucs, accs = multi_test(output_dir, 'seg.png', 'seg-eval.png', mode='stare')
+    
+    with open('./accs.txt', 'w') as f:
+        for i in accs:
+            f.write(str(i))
+            f.write('\n')
+        f.write('Mean: ' + str(acc_mean))
+
+    with open('./aucs.txt', 'w') as f:
+        for i in aucs:
+            f.write(str(i))
+            f.write('\n')
+        f.write('Mean: ' + str(auc_mean))
+
+
+    results_folder = os.path.join(models_dir, pre_pro + '_results')
+
+    if not os.path.exists(results_folder):
+        os.mkdir(results_folder)
+
+    shutil.move('./accs.txt', os.path.join(results_folder, 'accs.txt'))  
+    shutil.move('./aucs.txt', os.path.join(results_folder, 'aucs.txt'))
+
 
 if __name__ == '__main__':
 
     # multi_predict(r'C:\Users\James\Desktop\seg_test\processed_data_testing\CHASE_DB1\clahe\patch_model_2.h5', r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4', 'n4-clahe', mode='chase_db1')
     # multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4', 'seg', 'seg-eval', mode='chase_db1')
-    multi_epoch_pred()
-    # pred_prepro_chase()
+    # multi_epoch_pred(mode='drive')
+
+    for i in ['clahe', 'green', 'n4', 'n4-clahe']:
+        pred_prepro_stare(pre_pro=i)

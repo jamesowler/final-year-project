@@ -23,9 +23,9 @@ def multi_process_contrast(input_dir):
         print(i)
         extract_channel(i)
         # preprocessing(i)
-        contrast_enhancement(i)
+        # contrast_enhancement(i)
 
 if __name__ == '__main__':
 
     # rename(r"C:\Users\James\Projects\final-year-project\data\DRIVE\imgs-n4")
-    multi_process_contrast(r"C:\Users\James\Projects\final-year-project\data\CHASE_DB1\imgs-clahe")
+    multi_process_contrast(r"C:\Users\James\Projects\final-year-project\data\STARE\masks")

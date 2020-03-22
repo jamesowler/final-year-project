@@ -2,9 +2,9 @@ params = {}
 
 # patch training params #####
 params['patch_size'] = 128
-params['preprocessing'] = 'clahe'
+params['preprocessing'] = 'n4-clahe'
 params['data_dir'] = r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\chase_db1_128-' + params['preprocessing']
-params['n_epochs'] = 15
+params['n_epochs'] = 5
 params['batch_size'] = 25
 
 params['n_channels'] = 1

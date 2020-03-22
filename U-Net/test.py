@@ -107,6 +107,10 @@ def multi_test(results_dir, filter1, filter2, epoch_num=None, mode='drive'):
         fov_files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\mask\*')
         seg_ground_truths = glob.glob(r'C:\Users\James\Projects\final-year-project\data\DRIVE\DRIVE\test\1st_manual\*')
 
+    if mode == 'stare':
+        fov_files = glob.glob(r'C:\Users\James\Projects\final-year-project\data\STARE\fov_masks\*')
+        seg_ground_truths = glob.glob(r'C:\Users\James\Projects\final-year-project\data\STARE\masks\*')
+    
     test_results = []
     test_results_eval = []
     [test_results.append(i) for i in glob.glob(results_dir + '\*') if filter1 in i]
@@ -134,8 +138,10 @@ def multi_test(results_dir, filter1, filter2, epoch_num=None, mode='drive'):
     print()
     print('AUC:', '{:.4f}'.format(np.mean(aucs)), '\nAccuracy: ', '{:.4f}'.format(np.mean(accs)), '\nNon FOV Accuracy', np.mean(non_fov_accs))
 
-    return np.mean(aucs), np.mean(accs)
-
+    if mode == 'stare':
+        return np.mean(aucs), np.mean(accs), aucs, accs
+    else:
+        return np.mean(aucs), np.mean(accs)
 
 def plot(img1, img2, img3):
     img1 = np.array(Image.open(img1).convert('LA'))[:, :, 0]
