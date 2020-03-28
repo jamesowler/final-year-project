@@ -4,6 +4,7 @@ __pycache__
 *.h5
 *.asv
 *.txt
+*.json
 
 data
 

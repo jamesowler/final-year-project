@@ -1,6 +1,7 @@
 import os
 import glob
 import shutil
+import json
 
 import cv2
 import numpy as np
@@ -16,7 +17,7 @@ from test import multi_test
 
 import loss_funcs
 from params import params
-from model import model_2d_u_net_shallow, model_2d_u_net, model_2d_u_net_full
+from model import model_2d_u_net_shallow, model_2d_u_net, model_2d_u_net_full, fully_conv_expri_network
 from test_model import MultiResUnet_shallow, MultiResUnet
 
 
@@ -31,6 +32,9 @@ def patch_inferance(filename, model_file, save_dir, model_type):
 
     if model_type == 'unet_shallow':
         model = model_2d_u_net_shallow(params)
+    
+    if model_type == 'multi_res_testing':
+        model = fully_conv_expri_network(params)
 
     if model_type == 'MultiResUnet':
         model = MultiResUnet(params['patch_size'], params['patch_size'], 1)
@@ -84,111 +88,116 @@ def multi_predict(model_file, outputdir, prepro, mode='drive'):
         # clear session to try and avoid memory leakage when calling function in a loop
         K.clear_session()
 
-def multi_epoch_pred(first_epoch=1, final_epoch=15, step=1, full=None, mode='chase_db1'):
+def multi_epoch_pred(first_epoch=1, final_epoch=15, step=1, full=None, mode='drive'):
 
     '''
     Output aucs and accs to results.txt file for multiple classiers (saved at different epochs in he training process)
     '''
 
-    results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3'
-    
-    accs = []
-    aucs = []
-    epochs = []
+    output_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3'
+    multi_epoch_results = {}
 
     # obtain predicted segmentation masks
     for epoch in range(first_epoch, final_epoch + 1, step):
-        epochs.append(epoch)
 
         if not full:
-            multi_predict(r'C:\Users\James\Projects\final-year-project\patch_model_' + str(epoch) + '.h5', results_dir, 'n4-clahe', mode=mode)
+            multi_predict(r'C:\Users\James\Projects\final-year-project\patch_model_' + str(epoch) + '.h5', output_dir, 'n4-clahe', mode=mode)
 
         if full:
-            multi_predict_full(r'C:\Users\James\Projects\final-year-project\patch_model_' + str(epoch) + '.h5', results_dir)
+            multi_predict_full(r'C:\Users\James\Projects\final-year-project\patch_model_' + str(epoch) + '.h5', output_dir)
 
         # calc stats
-        auc, acc = multi_test(results_dir, 'seg.png', 'seg-eval.png', epoch_num=epoch, mode=mode)
-        accs.append(acc)
-        aucs.append(auc)
+        aucs, accs, sens, specs = multi_test(output_dir, 'seg.png', 'seg-eval.png', mode=mode)
 
-    with open('./results.txt', 'w') as f:
-        for i, j in zip(accs, aucs):
-            f.write(str(j) + ',')
-            f.write(str(i))
-            f.write('\n')
+        results = {}
+        results['accs'] = accs
+        results['accs_mean'] = round(np.mean(accs), 4)
+        results['aucs'] = aucs
+        results['aucs_mean'] = round(np.mean(aucs), 4)
+        results['sens'] = sens
+        results['sens_mean'] = round(np.mean(sens), 4)
+        results['specs'] = specs
+        results['specs_mean'] = round(np.mean(specs), 4)
 
-def pred_prepro():
+        multi_epoch_results[f'Epoch {str(epoch)}'] = results
+
+    with open('multi_epoch_results.json', 'w') as json_file:
+        json.dump(multi_epoch_results, json_file, indent=4, sort_keys=True)   
+
+def pred_prepro_drive():
     '''
     Returns text file of results for each model type and preprocessing method
     '''
 
     for pre_pro in ['clahe', 'green', 'n4', 'n4-clahe']:
 
-        results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3'
-        models = ['unet_shallow', 'unet']
-        # models = ['unet_shallow']
+        folder = r'C:\Users\James\Desktop\seg_test\processed_data_testing\DRIVE-128\\' + pre_pro
+        output_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3'
+        model = 'unet'
+        model_folders = r'C:\Users\James\Desktop\seg_test\processed_data_testing\\' + pre_pro + r'\Unet'
 
-        model_folders = [r'C:\Users\James\Desktop\seg_test\processed_data_testing\\' + pre_pro + r'\Shallow_Unet', r'C:\Users\James\Desktop\seg_test\processed_data_testing\\' + pre_pro + r'\Unet']
+        params['model'] = model
 
-        # model_folders = [r'C:\Users\James\Desktop\seg_test\processed_data_testing\\' + pre_pro + r'\Shallow_Unet']
+        multi_epoch_results = {}
 
-        for model, folder in zip(models, model_folders):
-            params['model'] = model
-            accs = []
-            aucs = []
-            for epoch in range(1, 16):
-                print(pre_pro, model, str(epoch))
-                multi_predict(folder + r'\patch_model_' + str(epoch) + '.h5', results_dir, pre_pro)
-                auc, acc = multi_test(results_dir, 'seg.png', 'seg-eval.png', epoch_num=epoch)
-                accs.append(acc)
-                aucs.append(auc)
+        for epoch in range(1, 3):
+            print(pre_pro, model, str(epoch))
+            multi_predict(folder + r'\patch_model_' + str(epoch) + '.h5', output_dir, pre_pro)
+            aucs, accs, sens, specs = multi_test(output_dir, 'seg.png', 'seg-eval.png', mode='drive')
+            results = {}
+            results['accs'] = accs
+            results['accs_mean'] = round(np.mean(accs), 4)
+            results['aucs'] = aucs
+            results['aucs_mean'] = round(np.mean(aucs), 4)
+            results['sens'] = sens
+            results['sens_mean'] = round(np.mean(sens), 4)
+            results['specs'] = specs
+            results['specs_mean'] = round(np.mean(specs), 4)
 
-            with open('./accs.txt', 'w') as f:
-                for i in accs:
-                    f.write(str(i))
-                    f.write('\n')
+            multi_epoch_results[f'Epoch {str(epoch)}'] = results
+        
+        
+        with open('multi_epoch_results.json', 'w') as json_file:
+            json.dump(multi_epoch_results, json_file, indent=4, sort_keys=True)        
 
-            with open('./aucs.txt', 'w') as f:
-                for i in aucs:
-                    f.write(str(i))
-                    f.write('\n')
-
-            shutil.copy('./accs.txt', os.path.join(folder, 'accs.txt'))  
-            shutil.copy('./aucs.txt', os.path.join(folder, 'aucs.txt'))
+        shutil.move('./multi_epoch_results.json', os.path.join(folder, 'multi_epoch_results.json'))
 
 def pred_prepro_chase():
+
     for pre_pro in ['clahe', 'green', 'n4', 'n4-clahe']:
 
-        results_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-3'
+        multi_epoch_results = {}
+        output_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\CHASE_DB1'
+        folder = r'C:\Users\James\Desktop\seg_test\processed_data_testing\CHASE_DB1-128\\' + pre_pro
+        
+        for epoch in range(1,4):
 
-        folder = r'C:\Users\James\Desktop\seg_test\processed_data_testing\DRIVE-128\\' + pre_pro
+            multi_predict(folder + r'\patch_model_' + str(epoch) + '.h5', output_dir, pre_pro, mode='chase_db1')
+            aucs, accs, sens, specs = multi_test(output_dir, 'seg.png', 'seg-eval.png', mode='chase_db1')
 
-        accs = []
-        aucs = []
-        for epoch in range(1, 16):
-            print(pre_pro, str(epoch))
-            multi_predict(folder + r'\patch_model_' + str(epoch) + '.h5', results_dir, pre_pro, mode='drive')
-            auc, acc = multi_test(results_dir, 'seg.png', 'seg-eval.png', epoch_num=epoch, mode='drive')
-            accs.append(acc)
-            aucs.append(auc)
+            results = {}
+            results['accs'] = accs
+            results['accs_mean'] = round(np.mean(accs), 4)
+            results['aucs'] = aucs
+            results['aucs_mean'] = round(np.mean(aucs), 4)
+            results['sens'] = sens
+            results['sens_mean'] = round(np.mean(sens), 4)
+            results['specs'] = specs
+            results['specs_mean'] = round(np.mean(specs), 4)
 
-        with open('./accs.txt', 'w') as f:
-            for i in accs:
-                f.write(str(i))
-                f.write('\n')
+            multi_epoch_results[f'Epoch {str(epoch)}'] = results
 
-        with open('./aucs.txt', 'w') as f:
-            for i in aucs:
-                f.write(str(i))
-                f.write('\n')
+            
+        with open('multi_epoch_results.json', 'w') as json_file:
+            json.dump(multi_epoch_results, json_file, indent=4, sort_keys=True)
 
-        shutil.copy('./accs.txt', os.path.join(folder, 'accs.txt'))  
-        shutil.copy('./aucs.txt', os.path.join(folder, 'aucs.txt'))
+
+        shutil.move('./multi_epoch_results.json', os.path.join(folder, 'multi_epoch_results.json'))
 
 def pred_prepro_stare(pre_pro='clahe'):
     models_dir = r'C:\Users\James\Desktop\seg_test\processed_data_testing\STARE-128'
     imgs_dir = r'C:\Users\James\Projects\final-year-project\data\STARE'
-    epoch_num = '2'
+    epoch_num = '3'
     image_nums = [str(x) + '.png' for x in range(1, 21)]
 
     output_dir = r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\STARE'
@@ -204,36 +213,36 @@ def pred_prepro_stare(pre_pro='clahe'):
         img_model_path_prepro_model = os.path.join(img_model_path_prepro, f'patch_model_{epoch_num}.h5')
 
         patch_inferance(input_img, img_model_path_prepro_model, output_dir, 'unet')
+        K.clear_session()
 
-    auc_mean, acc_mean, aucs, accs = multi_test(output_dir, 'seg.png', 'seg-eval.png', mode='stare')
+    aucs, accs, sens, specs = multi_test(output_dir, 'seg.png', 'seg-eval.png', mode='stare')
+
+    results = {}
+    results['accs'] = accs
+    results['accs_mean'] = round(np.mean(accs), 4)
+    results['aucs'] = aucs
+    results['aucs_mean'] = round(np.mean(aucs), 4)
+    results['sens'] = sens
+    results['sens_mean'] = round(np.mean(sens), 4)
+    results['specs'] = specs
+    results['specs_mean'] = round(np.mean(specs), 4)
     
-    with open('./accs.txt', 'w') as f:
-        for i in accs:
-            f.write(str(i))
-            f.write('\n')
-        f.write('Mean: ' + str(acc_mean))
-
-    with open('./aucs.txt', 'w') as f:
-        for i in aucs:
-            f.write(str(i))
-            f.write('\n')
-        f.write('Mean: ' + str(auc_mean))
-
+    with open('results.txt', 'w') as json_file:
+        json.dump(results, json_file, indent=4, sort_keys=True)
 
     results_folder = os.path.join(models_dir, pre_pro + '_results')
 
     if not os.path.exists(results_folder):
         os.mkdir(results_folder)
-
-    shutil.move('./accs.txt', os.path.join(results_folder, 'accs.txt'))  
-    shutil.move('./aucs.txt', os.path.join(results_folder, 'aucs.txt'))
+    
+    shutil.move('results.txt', os.path.join(results_folder, 'results.txt'))
 
 
 if __name__ == '__main__':
 
-    # multi_predict(r'C:\Users\James\Desktop\seg_test\processed_data_testing\CHASE_DB1\clahe\patch_model_2.h5', r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4', 'n4-clahe', mode='chase_db1')
-    # multi_test(r'C:\Users\James\Projects\final-year-project\data\U-Net-testing\DRIVE-TEST-4', 'seg', 'seg-eval', mode='chase_db1')
-    # multi_epoch_pred(mode='drive')
+    # for i in ['clahe', 'green', 'n4', 'n4-clahe']:
+    #     pred_prepro_stare(pre_pro=i)
 
-    for i in ['clahe', 'green', 'n4', 'n4-clahe']:
-        pred_prepro_stare(pre_pro=i)
+    # pred_prepro_chase()
+    # pred_prepro_drive()
+    multi_epoch_pred(first_epoch=1, final_epoch=2)

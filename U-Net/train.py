@@ -11,7 +11,7 @@ from keras.optimizers import Adam
 
 from params import params
 from data_utils import load_batch_patch_training, guass_noise
-from model import model_2d_u_net, model_2d_u_net_shallow, model_2d_u_net_full
+from model import model_2d_u_net, model_2d_u_net_shallow, model_2d_u_net_full, fully_conv_expri_network
 from test_model import MultiResUnet_shallow, MultiResUnet
 import loss_funcs
 
@@ -164,7 +164,7 @@ def train_from_data_dir_stare(params, model, img_id_filter):
 
     # list images in dataset directory
     imgs = os.listdir(imgs_dir)
-    imgs = [x for x in imgs if img_id_filter not in x]
+    imgs = [x for x in imgs if x[0:2] not in img_id_filter]
 
     # train - validation split
     imgs_rand = imgs
@@ -391,3 +391,7 @@ if __name__ == '__main__':
 
     if params['model'] == 'MultiResUnet_shallow':
         train_multi_res_unet_shallow(weights=params['weights'])
+
+    if params['model'] == 'multi_res_testing':
+        model = fully_conv_expri_network(params)
+        train_from_data_dir(params, model)

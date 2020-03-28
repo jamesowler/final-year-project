@@ -1,4 +1,6 @@
 import glob
+import json
+import os
 import numpy as np
 from scipy.io import loadmat
 
@@ -61,7 +63,46 @@ def correlated_ttest_(n_folds, classifier1, classifier2):
     print('Accuracy stats: ', np.max(accuray_diff))
     print(p_acc, p_roc)
 
+def correlated_ttest_dl():
+
+    results_folders = ['green_results', 'n4_results', 'clahe_results', 'n4-clahe_results']
+    file_name = 'results.json'
+    stare_results = r'C:\Users\James\Desktop\seg_test\processed_data_testing\STARE-128'
+
+    ouput_json = {}
+    output_file_name = 'stare_stats.json'
+
+    for i in results_folders:
+        results_to_compare = [x for x in results_folders if x is not i]
+        file_path = os.path.join(os.path.join(stare_results, i), file_name)
+        prepro_json = {}
+
+        with open(file_path) as json_file:
+            results_1_dict = json.load(json_file)
+
+        for j in results_to_compare:
+            file_path = os.path.join(os.path.join(stare_results, j), file_name)
+
+            with open(file_path) as json_file:
+                results_2_dict = json.load(json_file)
+            prepro_method_json = {}
+
+            round_func = lambda a : round(a, 4)
+
+            for k in ['accs', 'aucs', 'sens', 'specs']:
+                diff = np.array(results_1_dict[k]) - np.array(results_2_dict[k])
+                results = map(round_func, bst.correlated_ttest(diff, 0.01))
+                prepro_method_json[k] = list(results)
+
+            prepro_json['vs ' + j] = prepro_method_json
+        ouput_json[i] = prepro_json
+
+    with open(os.path.join(stare_results, output_file_name), 'w') as f:
+        json.dump(ouput_json, f, indent=4)
+
+
 if __name__ == '__main__':
     # correlated_ttest_(5, 'mixed_drive_n4_plus_clahe_gmm', 'mixed_drive_gmm')
-    correlated_ttest_(5, 'mixed_drive_n4_gmm', 'mixed_drive_gmm')
+    # correlated_ttest_(5, 'mixed_drive_n4_gmm', 'mixed_drive_gmm')
+    correlated_ttest_dl()
 

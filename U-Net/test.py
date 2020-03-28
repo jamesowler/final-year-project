@@ -64,7 +64,10 @@ def accuracy(pred_file, gt_file, fov_filename):
     # print('TP: %i, FP: %i, TN: %i, FN: %i' % (TP,FP,TN,FN))
     accuray = (TP + TN)/(TP + TN + FP + FN)
 
-    return accuray
+    sens = TP/(TP+FN)
+    spec = TN/(TN+FP)
+
+    return accuray, sens, spec
 
 def non_fov_accuracy(pred_file, gt_file):
 
@@ -119,12 +122,16 @@ def multi_test(results_dir, filter1, filter2, epoch_num=None, mode='drive'):
     accs = []
     non_fov_accs = []
     aucs = []
+    sens = []
+    specs = []
 
     # print(test_results, '\n', test_results_eval)
 
     for i, j, k in zip(test_results, seg_ground_truths, fov_files):
-        acc = accuracy(i, j, k)
+        acc, sen, spec = accuracy(i, j, k)
         accs.append(acc)
+        sens.append(sen)
+        specs.append(spec)
     
     for i, j in zip(test_results, seg_ground_truths):
         non_fov_acc = non_fov_accuracy(i,j)
@@ -138,10 +145,7 @@ def multi_test(results_dir, filter1, filter2, epoch_num=None, mode='drive'):
     print()
     print('AUC:', '{:.4f}'.format(np.mean(aucs)), '\nAccuracy: ', '{:.4f}'.format(np.mean(accs)), '\nNon FOV Accuracy', np.mean(non_fov_accs))
 
-    if mode == 'stare':
-        return np.mean(aucs), np.mean(accs), aucs, accs
-    else:
-        return np.mean(aucs), np.mean(accs)
+    return aucs, accs, sens, specs
 
 def plot(img1, img2, img3):
     img1 = np.array(Image.open(img1).convert('LA'))[:, :, 0]

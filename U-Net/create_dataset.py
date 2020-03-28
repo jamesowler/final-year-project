@@ -67,17 +67,20 @@ def create_image_img_folder(ouput_dir, patch_size, n_patches, mode='drive'):
     # segs
     if mode == 'drive':
         segs_dir = r'C:\Users\James\Projects\final-year-project\data\DRIVE\masks'
+        data = 'DRIVE'
 
     if mode == 'chase_db1':
         segs_dir = r'C:\Users\James\Projects\final-year-project\data\CHASE_DB1\masks'
+        data = 'CHASE_DB1'
 
     if mode == 'stare':
         segs_dir = r'C:\Users\James\Projects\final-year-project\data\STARE\masks'
+        data = 'STARE'
 
     # green channel
-    files_1 = glob.glob(r'C:\Users\James\Projects\final-year-project\data\STARE\imgs-green' + '\*')
+    files_1 = glob.glob(f'C:\\Users\\James\\Projects\\final-year-project\\data\\{data}\\imgs-green' + '\*')
     if not mode == 'stare':
-        training_files_1 = [i for i in files_1 if 'training.png' in i]
+        training_files_1 = files_1 # [i for i in files_1 if 'training.png' in i]
     else:
         training_files_1 = files_1
     os.mkdir(ouput_dir + 'green')
@@ -87,9 +90,9 @@ def create_image_img_folder(ouput_dir, patch_size, n_patches, mode='drive'):
     os.mkdir(seg_dir_1)
 
     # n4
-    files_2 = glob.glob(r'C:\Users\James\Projects\final-year-project\data\STARE\imgs-n4' + '\*')
+    files_2 = glob.glob(f'C:\\Users\\James\\Projects\\final-year-project\\data\\{data}\\imgs-n4' + '\*')
     if not mode == 'stare':
-        training_files_2 = [i for i in files_2 if 'training.png' in i]
+        training_files_2 = files_2 # [i for i in files_2 if 'training.png' in i]
     else:
         training_files_2 = files_2
     os.mkdir(ouput_dir + 'n4')
@@ -99,9 +102,9 @@ def create_image_img_folder(ouput_dir, patch_size, n_patches, mode='drive'):
     os.mkdir(seg_dir_2)
 
     # n4_plus_clahe
-    files_3 = glob.glob(r'C:\Users\James\Projects\final-year-project\data\STARE\imgs-n4-clahe' + '\*')
+    files_3 = glob.glob(f'C:\\Users\\James\\Projects\\final-year-project\\data\\{data}\\imgs-n4-clahe' + '\*')
     if not mode == 'stare':
-        training_files_3 = [i for i in files_3 if 'training.png' in i]
+        training_files_3 = files_3 # [i for i in files_3 if 'training.png' in i]
     else:
         training_files_3 = files_3
     os.mkdir(ouput_dir + 'n4-clahe')
@@ -111,9 +114,9 @@ def create_image_img_folder(ouput_dir, patch_size, n_patches, mode='drive'):
     os.mkdir(seg_dir_3)
 
     # clahe
-    files_4 = glob.glob(r'C:\Users\James\Projects\final-year-project\data\STARE\imgs-clahe' + '\*')
+    files_4 = glob.glob(f'C:\\Users\\James\\Projects\\final-year-project\\data\\{data}\\imgs-clahe' + '\*')
     if not mode == 'stare':
-        training_files_4 = [i for i in files_4 if 'training.png' in i]
+        training_files_4 = files_4 # [i for i in files_4 if 'training.png' in i]
     else:
         training_files_4 = files_4
     os.mkdir(ouput_dir + 'clahe')
@@ -225,4 +228,4 @@ def rename_chase_files(input_dir):
         shutil.move(old_path, new_path)
 
 if __name__ == '__main__':
-    create_image_img_folder(r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\stare_128-', 128, 3000, mode='stare') 
+    create_image_img_folder(r'C:\Users\James\Projects\final-year-project\data\pre-processing-test\drive_crossval_128-', 128, 3000, mode='drive')
